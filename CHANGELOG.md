@@ -1,5 +1,13 @@
 # Changelog
 
+# [1.2.0](https://github.com/lib-pack/release-it-gitea/compare/1.1.0...1.2.0) (2025-06-06)
+
+### Features
+
+- 增加测试超时设置，优化端到端测试输出，确保包含发布信息和变更日志 ([3ae4c79](https://github.com/lib-pack/release-it-gitea/commit/3ae4c790531187c585c2bebf06118278008e4272))
+- 更新 Gitea 插件的类型定义，优化配置选项，添加测试用例，更新 .gitignore 文件以排除临时测试目录 ([9c18253](https://github.com/lib-pack/release-it-gitea/commit/9c182539e174a1fa22e01a7a759586af8a31909c))
+- 添加演示脚本和手动测试脚本，更新 ESLint 配置，新增测试文档和示例配置文件，移除旧的示例配置文件 ([3870a62](https://github.com/lib-pack/release-it-gitea/commit/3870a62cd5ad7e25ab6619f6824a9cd7a80a56d9))
+
 # 1.1.0 (2025-06-06)
 
 ### Features
