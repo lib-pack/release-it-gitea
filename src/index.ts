@@ -33,7 +33,7 @@ class GiteaPlugin extends Plugin {
 	}
 
 	static isEnabled(config?: GiteaConfig): boolean {
-		return Boolean(config?.host);
+		return Boolean(config?.release !== false);
 	}
 
 	/**
