@@ -1,5 +1,3 @@
-import type { Config } from "release-it";
-
 import fetch from "node-fetch";
 import { Plugin } from "release-it";
 
@@ -25,13 +23,6 @@ interface GiteaReleaseResponse {
 }
 
 class GiteaPlugin extends Plugin {
-	private giteaConfig: GiteaConfig;
-
-	constructor(config: Config) {
-		super(config);
-		this.giteaConfig = this.getGiteaConfig();
-	}
-
 	static isEnabled(config?: GiteaConfig): boolean {
 		return Boolean(config?.release !== false);
 	}
@@ -41,22 +32,28 @@ class GiteaPlugin extends Plugin {
 	 * @returns 验证后的 Gitea 配置对象
 	 * @throws 当配置缺失或无效时抛出错误
 	 */
-	private getGiteaConfig(): GiteaConfig {
-		const gitea = this.options;
+	private get giteaConfig(): GiteaConfig {
+		const gitea = this.getContext() as GiteaConfig;
+
 		if (!gitea) {
 			throw new Error("Gitea 配置未找到");
 		}
+
+		const repo = this.getContext("repo") as {
+			owner: string;
+			repository: string;
+		};
 
 		// 设置默认值
 		const config: GiteaConfig = {
 			draft: gitea.draft ?? false,
 			host: gitea.host,
-			owner: gitea.owner ?? this.context.repo.owner,
+			owner: gitea.owner ?? repo.owner,
 			prerelease: gitea.prerelease ?? false,
 			release: gitea.release !== false,
 			releaseNotes: gitea.releaseNotes ?? "${changelog}",
 			releaseTitle: gitea.releaseTitle ?? "v${version}",
-			repository: gitea.repository ?? this.context.repo.repository,
+			repository: gitea.repository ?? repo.repository,
 			timeout: gitea.timeout ?? 30000,
 			tokenRef: gitea.tokenRef ?? "GITEA_TOKEN",
 		};
@@ -215,45 +212,25 @@ class GiteaPlugin extends Plugin {
 	 * @returns 替换变量后的字符串
 	 */
 	private interpolate(template: string): string {
+		const context = this.config.getContext() as {
+			branchName: string;
+			changelog: string;
+			latestVersion: string;
+			name: string;
+			repo: {
+				owner: string;
+				repository: string;
+			};
+			version: string;
+		};
 		return template
-			.replace(/\$\{version\}/g, this.context.version)
-			.replace(/\$\{latestVersion\}/g, this.context.latestVersion)
-			.replace(/\$\{changelog\}/g, this.context.changelog)
-			.replace(/\$\{name\}/g, this.context.name)
-			.replace(/\$\{repo\.owner\}/g, this.context.repo.owner)
-			.replace(/\$\{repo\.repository\}/g, this.context.repo.repository)
-			.replace(/\$\{branchName\}/g, this.context.branchName);
-	}
-
-	/**
-	 * 初始化插件，验证配置和连接.
-	 * @throws 当配置无效或连接失败时抛出错误
-	 */
-	async init(): Promise<void> {
-		this.log.info("初始化 Gitea 插件");
-
-		// 验证配置
-		try {
-			this.getToken();
-			this.log.verbose("Gitea API token 验证成功");
-		} catch (error) {
-			if (error instanceof Error) {
-				this.log.error(error.message);
-			}
-			throw error;
-		}
-
-		// 测试 API 连接
-		try {
-			const endpoint = `/repos/${this.giteaConfig.owner}/${this.giteaConfig.repository}`;
-			await this.apiRequest(endpoint);
-			this.log.verbose("Gitea API 连接测试成功");
-		} catch (error) {
-			if (error instanceof Error) {
-				this.log.error(`无法连接到 Gitea 仓库: ${error.message}`);
-			}
-			throw error;
-		}
+			.replace(/\$\{version\}/g, context.version)
+			.replace(/\$\{latestVersion\}/g, context.latestVersion)
+			.replace(/\$\{changelog\}/g, context.changelog)
+			.replace(/\$\{name\}/g, context.name)
+			.replace(/\$\{repo\.owner\}/g, context.repo.owner)
+			.replace(/\$\{repo\.repository\}/g, context.repo.repository)
+			.replace(/\$\{branchName\}/g, context.branchName);
 	}
 
 	/**
@@ -266,7 +243,7 @@ class GiteaPlugin extends Plugin {
 			return;
 		}
 
-		const tagName = `v${this.context.version}`;
+		const tagName = this.config.getContext("tagName") as string;
 		const releaseTitle = this.interpolate(
 			this.giteaConfig.releaseTitle ?? "v${version}",
 		);
@@ -300,7 +277,7 @@ class GiteaPlugin extends Plugin {
 			this.log.info(`✅ Gitea 发布创建成功: ${release.html_url}`);
 
 			// 设置发布 URL 到上下文中，供其他插件使用
-			this.context.releaseUrl = release.html_url;
+			this.config.setContext("releaseUrl", release.html_url);
 		} catch (error) {
 			if (error instanceof Error) {
 				this.log.error(`❌ 创建 Gitea 发布失败: ${error.message}`);
@@ -313,8 +290,9 @@ class GiteaPlugin extends Plugin {
 	 * 发布完成后的清理和通知操作
 	 */
 	async afterRelease(): Promise<void> {
-		if (this.context.releaseUrl) {
-			this.log.info(`🎉 发布完成! 查看发布: ${this.context.releaseUrl}`);
+		const releaseUrl = this.config.getContext("releaseUrl") as string;
+		if (releaseUrl) {
+			this.log.info(`🎉 发布完成! 查看发布: ${releaseUrl}`);
 		}
 		return Promise.resolve();
 	}

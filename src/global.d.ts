@@ -1,6 +1,7 @@
 declare module "release-it" {
 	interface Config {
-		getContext(path: string): GiteaConfig;
+		getContext(path?: string): unknown;
+		setContext(path: string, value: unknown): void;
 	}
 
 	interface Context {
@@ -22,7 +23,6 @@ declare module "release-it" {
 
 	class Plugin {
 		config: Config;
-		context: Context;
 		log: {
 			error: (message: string) => void;
 			exec: (command: string) => void;
@@ -30,7 +30,6 @@ declare module "release-it" {
 			verbose: (message: string) => void;
 			warn: (message: string) => void;
 		};
-		options: GiteaConfig;
 		shell: {
 			exec: (command: string) => Promise<string>;
 		};
@@ -43,6 +42,7 @@ declare module "release-it" {
 		beforeBump(): Promise<void>;
 		beforeRelease(): Promise<void>;
 		bump(): Promise<void>;
+		getContext(path?: string): unknown;
 		getIncrement(): string;
 		getIncrementedVersion(): string;
 		getIncrementedVersionCI(): string;
