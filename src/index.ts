@@ -39,7 +39,7 @@ class GiteaPlugin extends Plugin {
 			throw new Error("Gitea 配置未找到");
 		}
 
-		const repo = this.getContext("repo") as {
+		const repo = this.config.getContext("repo") as {
 			owner: string;
 			repository: string;
 		};
