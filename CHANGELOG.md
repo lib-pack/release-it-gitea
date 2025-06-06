@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1](https://github.com/lib-pack/release-it-gitea/compare/1.3.0...1.3.1) (2025-06-06)
+
+### Bug Fixes
+
+- 修复 Gitea 插件中的上下文获取逻辑，将 getContext 方法的调用从 this.getContext 更新为 this.config.getContext ([768b416](https://github.com/lib-pack/release-it-gitea/commit/768b4162ea41edfad1bc35f40b646e6de1e53253))
+
 # [1.3.0](https://github.com/lib-pack/release-it-gitea/compare/1.2.1...1.3.0) (2025-06-06)
 
 ### Features
