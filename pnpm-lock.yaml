@@ -28,7 +28,7 @@ importers:
         specifier: 22.13.10
         version: 22.13.10
       '@types/node-fetch':
-        specifier: ^2.6.11
+        specifier: 2.6.12
         version: 2.6.12
       '@vitest/coverage-v8':
         specifier: 3.0.9
@@ -2382,6 +2382,7 @@ packages:
 
   lodash.get@4.4.2:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
   lodash.isplainobject@4.0.6:
     resolution: {integrity: sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==}
