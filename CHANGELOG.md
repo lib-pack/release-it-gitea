@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.2](https://github.com/lib-pack/release-it-gitea/compare/1.3.1...1.3.2) (2025-06-06)
+
+### Bug Fixes
+
+- 增强 Gitea 插件的日志输出，添加请求参数信息以便于调试 ([81df2d5](https://github.com/lib-pack/release-it-gitea/commit/81df2d5897a6bd128d2aad187d6720860dac2f62))
+
 ## [1.3.1](https://github.com/lib-pack/release-it-gitea/compare/1.3.0...1.3.1) (2025-06-06)
 
 ### Bug Fixes
