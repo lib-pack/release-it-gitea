@@ -1,6 +1,6 @@
 {
 	"name": "release-it-gitea",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "release-it gitea plugin",
 	"keywords": [
 		"gitea",

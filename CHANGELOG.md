@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1](https://github.com/lib-pack/release-it-gitea/compare/1.2.0...1.2.1) (2025-06-06)
+
+### Bug Fixes
+
+- 更新 Gitea 插件的启用逻辑，确保在配置中 release 选项为 false 时插件被禁用 ([6c17a69](https://github.com/lib-pack/release-it-gitea/commit/6c17a69e0a24d706af05cf913a8368f8be3fa0eb))
+
 # [1.2.0](https://github.com/lib-pack/release-it-gitea/compare/1.1.0...1.2.0) (2025-06-06)
 
 ### Features
