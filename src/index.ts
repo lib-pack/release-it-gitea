@@ -32,8 +32,8 @@ class GiteaPlugin extends Plugin {
 		this.giteaConfig = this.getGiteaConfig();
 	}
 
-	static isEnabled(config?: Config): boolean {
-		return Boolean(config?.gitea?.release);
+	static isEnabled(config?: GiteaConfig): boolean {
+		return Boolean(config?.host);
 	}
 
 	/**
@@ -42,7 +42,7 @@ class GiteaPlugin extends Plugin {
 	 * @throws 当配置缺失或无效时抛出错误
 	 */
 	private getGiteaConfig(): GiteaConfig {
-		const gitea = this.config.gitea;
+		const gitea = this.options;
 		if (!gitea) {
 			throw new Error("Gitea 配置未找到");
 		}

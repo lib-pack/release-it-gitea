@@ -20,6 +20,7 @@ vi.mock("release-it", () => ({
 	Plugin: class MockPlugin {
 		config: Config;
 		context: Context;
+		options: GiteaConfig;
 		log: {
 			error: (message: string) => void;
 			exec: (command: string) => void;
@@ -48,6 +49,13 @@ vi.mock("release-it", () => ({
 					repository: "testrepo",
 				},
 				version: "1.0.0",
+			};
+			// Initialize with mock options (this simulates how release-it passes plugin config)
+			this.options = {
+				host: "https://gitea.example.com",
+				owner: "testowner",
+				repository: "testrepo",
+				release: true,
 			};
 			// Initialize with mock log
 			this.log = {
@@ -85,46 +93,46 @@ describe("GiteaPlugin", () => {
 
 	beforeEach(() => {
 		mockConfig = {
-			gitea: {
+			getContext: vi.fn().mockReturnValue({
 				host: "https://gitea.example.com",
 				owner: "testowner",
-				release: true,
 				repository: "testrepo",
-			},
-		};
+				release: true,
+			}),
+		} as unknown as Config;
 
 		plugin = new GiteaPlugin(mockConfig);
+		// Override options for testing
+		(plugin as any).options = {
+			host: "https://gitea.example.com",
+			owner: "testowner",
+			repository: "testrepo",
+			release: true,
+		};
 	});
 
 	describe("isEnabled", () => {
-		it("should return true when gitea.release is true", () => {
+		it("should return true when host is provided", () => {
 			expect(
 				GiteaPlugin.isEnabled({
-					gitea: {
-						host: "test",
-						owner: "test",
-						release: true,
-						repository: "test",
-					},
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
 				}),
 			).toBe(true);
 		});
 
-		it("should return false when gitea.release is false", () => {
+		it("should return false when host is missing", () => {
 			expect(
 				GiteaPlugin.isEnabled({
-					gitea: {
-						host: "test",
-						owner: "test",
-						release: false,
-						repository: "test",
-					},
-				}),
+					owner: "testowner",
+					repository: "testrepo",
+				} as GiteaConfig),
 			).toBe(false);
 		});
 
-		it("should return false when gitea config is missing", () => {
-			expect(GiteaPlugin.isEnabled({})).toBe(false);
+		it("should return false when config is undefined", () => {
+			expect(GiteaPlugin.isEnabled(undefined)).toBe(false);
 		});
 	});
 
@@ -134,18 +142,22 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should throw error when gitea config is missing", () => {
-			expect(() => new GiteaPlugin({})).toThrow("Gitea 配置未找到");
+			const pluginWithoutOptions = new GiteaPlugin(mockConfig);
+			(pluginWithoutOptions as any).options = undefined;
+
+			expect(() => (pluginWithoutOptions as any).getGiteaConfig()).toThrow(
+				"Gitea 配置未找到",
+			);
 		});
 
 		it("should throw error when host is missing", () => {
-			const invalidConfig: Config = {
-				gitea: {
-					owner: "testowner",
-					repository: "testrepo",
-					// host is missing intentionally to test error
-				} as Config["gitea"],
+			const pluginWithMissingHost = new GiteaPlugin(mockConfig);
+			(pluginWithMissingHost as any).options = {
+				owner: "testowner",
+				repository: "testrepo",
 			};
-			expect(() => new GiteaPlugin(invalidConfig)).toThrow(
+
+			expect(() => (pluginWithMissingHost as any).getGiteaConfig()).toThrow(
 				"Gitea host 配置是必需的",
 			);
 		});
@@ -181,14 +193,12 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should handle trailing slash in host", () => {
-			const configWithSlash: Config = {
-				gitea: {
-					host: "https://gitea.example.com/",
-					owner: "testowner",
-					repository: "testrepo",
-				},
+			const pluginWithSlash = new GiteaPlugin(mockConfig);
+			(pluginWithSlash as any).options = {
+				host: "https://gitea.example.com/",
+				owner: "testowner",
+				repository: "testrepo",
 			};
-			const pluginWithSlash = new GiteaPlugin(configWithSlash);
 
 			const endpoint = "/test";
 			const result = (

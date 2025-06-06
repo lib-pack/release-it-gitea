@@ -1,6 +1,6 @@
 declare module "release-it" {
 	interface Config {
-		gitea?: GiteaConfig;
+		getContext(path: string): GiteaConfig;
 	}
 
 	interface Context {
@@ -30,6 +30,7 @@ declare module "release-it" {
 			verbose: (message: string) => void;
 			warn: (message: string) => void;
 		};
+		options: GiteaConfig;
 		shell: {
 			exec: (command: string) => Promise<string>;
 		};
@@ -37,7 +38,7 @@ declare module "release-it" {
 		constructor(config: Config);
 
 		static disablePlugin(): void;
-		static isEnabled(config?: Config): boolean;
+		static isEnabled(config?: GiteaConfig): boolean;
 		afterRelease(): Promise<void>;
 		beforeBump(): Promise<void>;
 		beforeRelease(): Promise<void>;
