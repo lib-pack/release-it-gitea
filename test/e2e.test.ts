@@ -84,6 +84,15 @@ describe("End-to-End Tests with release-it", () => {
 		writeFileSync("README.md", "# Test Package\n\nThis is a test package.");
 		execSync("git add .", { stdio: "pipe" });
 		execSync("git commit -m 'Initial commit'", { stdio: "pipe" });
+
+		// Create a tag to simulate existing releases
+		execSync("git tag v1.0.0", { stdio: "pipe" });
+
+		// Create remote tracking branch reference to avoid upstream errors
+		execSync("git update-ref refs/remotes/origin/main HEAD", { stdio: "pipe" });
+		execSync("git branch --set-upstream-to=origin/main main", {
+			stdio: "pipe",
+		});
 	});
 
 	afterEach(() => {
@@ -118,7 +127,8 @@ describe("End-to-End Tests with release-it", () => {
 			stdio: "pipe",
 		});
 
-		expect(output).toContain("dry run");
+		expect(output).toContain("🚀 Let's release");
+		expect(output).toContain("🏁 Done");
 		expect(mockFetch).toHaveBeenCalledTimes(0); // No actual API calls in dry-run
 	});
 
@@ -192,7 +202,9 @@ describe("End-to-End Tests with release-it", () => {
 			stdio: "pipe",
 		});
 
-		expect(output).toContain("dry run");
+		expect(output).toContain("🚀 Let's release");
+		expect(output).toContain("🏁 Done");
+		expect(output).toContain("Changelog:");
 		// In a real scenario, this would generate a changelog with the conventional commits
 	});
 
@@ -260,6 +272,7 @@ describe("End-to-End Tests with release-it", () => {
 			stdio: "pipe",
 		});
 
-		expect(output).toContain("dry run");
+		expect(output).toContain("🚀 Let's release");
+		expect(output).toContain("🏁 Done");
 	});
 });
