@@ -74,7 +74,7 @@ export GITEA_TOKEN="your-gitea-api-token"
 
 | 选项           | 类型      | 默认值                 | 描述                 |
 | -------------- | --------- | ---------------------- | -------------------- |
-| `host`         | `string`  | **必需**               | Gitea 服务器 URL     |
+| `host`         | `string`  | 当前仓库的 host        | Gitea 服务器 URL     |
 | `owner`        | `string`  | 从 git remote 自动检测 | 仓库所有者           |
 | `repository`   | `string`  | 从 git remote 自动检测 | 仓库名称             |
 | `release`      | `boolean` | `true`                 | 是否创建发布         |

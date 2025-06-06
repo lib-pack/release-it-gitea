@@ -40,20 +40,22 @@ class GiteaPlugin extends Plugin {
 		}
 
 		const repo = this.config.getContext("repo") as {
+			host: string;
 			owner: string;
+			project: string;
 			repository: string;
 		};
 
 		// 设置默认值
 		const config: GiteaConfig = {
 			draft: gitea.draft ?? false,
-			host: gitea.host,
+			host: gitea.host ?? repo.host,
 			owner: gitea.owner ?? repo.owner,
 			prerelease: gitea.prerelease ?? false,
 			release: gitea.release !== false,
 			releaseNotes: gitea.releaseNotes ?? "${changelog}",
 			releaseTitle: gitea.releaseTitle ?? "v${version}",
-			repository: gitea.repository ?? repo.repository,
+			repository: gitea.repository ?? repo.project,
 			timeout: gitea.timeout ?? 30000,
 			tokenRef: gitea.tokenRef ?? "GITEA_TOKEN",
 		};
@@ -96,7 +98,10 @@ class GiteaPlugin extends Plugin {
 	 * @returns 完整的 API URL
 	 */
 	private buildApiUrl(endpoint: string): string {
-		const host = this.giteaConfig.host.replace(/\/$/, "");
+		let host = this.giteaConfig.host.replace(/\/$/, "");
+		if (!host.startsWith("http")) {
+			host = `https://${host}`;
+		}
 		return `${host}/api/v1${endpoint}`;
 	}
 
