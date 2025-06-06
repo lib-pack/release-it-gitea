@@ -130,7 +130,9 @@ class GiteaPlugin extends Plugin {
 			timeout: this.giteaConfig.timeout,
 		};
 
-		this.log.verbose(`发送 ${requestOptions.method} 请求到: ${url}`);
+		this.log.verbose(
+			`发送 ${requestOptions.method} 请求到: ${url} 参数:${requestOptions.body ?? "none"}`,
+		);
 
 		try {
 			const response = await fetch(url, requestOptions);
