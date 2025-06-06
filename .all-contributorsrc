@@ -1,0 +1,47 @@
+{
+  "badgeTemplate": "\t<a href=\"#contributors\" target=\"_blank\"><img alt=\"👪 All Contributors: <%= contributors.length %>\" src=\"https://img.shields.io/badge/%F0%9F%91%AA_all_contributors-<%= contributors.length %>-21bb42.svg\" /></a>",
+  "commitType": "docs",
+  "contributors": [
+    {
+      "avatar_url": "https://avatars.githubusercontent.com/u/39021696?v=4",
+      "contributions": [
+        "code",
+        "content",
+        "doc",
+        "ideas",
+        "infra",
+        "maintenance",
+        "projectManagement",
+        "tool"
+      ],
+      "login": "Lydanne",
+      "name": "Lyda",
+      "profile": ""
+    },
+    {
+      "login": "lib-pack",
+      "name": "lib-pack",
+      "avatar_url": "https://avatars.githubusercontent.com/u/141385953?v=4",
+      "profile": "https://github.com/lib-pack",
+      "contributions": [
+        "code",
+        "content",
+        "doc",
+        "ideas",
+        "infra",
+        "maintenance",
+        "projectManagement",
+        "tool"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "contributorsSortAlphabetically": true,
+  "files": [
+    "README.md"
+  ],
+  "projectName": "release-it-gitea",
+  "projectOwner": "lib-pack",
+  "repoType": "github",
+  "commitConvention": "angular"
+}
