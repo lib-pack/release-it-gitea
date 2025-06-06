@@ -49,6 +49,18 @@ export default tseslint.config(
 			"no-useless-rename": "error",
 			"object-shorthand": "error",
 			"operator-assignment": "error",
+
+			// 放宽 JSDoc 规则
+			"jsdoc/check-param-names": "warn",
+			"jsdoc/informative-docs": "off",
+			"jsdoc/match-description": "off",
+
+			// 放宽 TypeScript 规则
+			"@typescript-eslint/no-unnecessary-condition": "off",
+			"@typescript-eslint/prefer-nullish-coalescing": "warn",
+
+			// 放宽 ESLint 注释规则
+			"@eslint-community/eslint-comments/disable-enable-pair": "warn",
 		},
 		settings: {
 			perfectionist: { partitionByComment: true, type: "natural" },

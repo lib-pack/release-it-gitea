@@ -1,0 +1,34 @@
+{
+	"$schema": "https://unpkg.com/release-it@19/schema/release-it.json",
+	"git": {
+		"commitMessage": "chore: release v${version}",
+		"tagName": "v${version}",
+		"requireCommits": true,
+		"requireCleanWorkingDir": true
+	},
+	"npm": {
+		"publish": true,
+		"publishArgs": ["--access", "public"]
+	},
+	"github": {
+		"release": false
+	},
+	"plugins": {
+		"@release-it/conventional-changelog": {
+			"preset": "angular",
+			"infile": "CHANGELOG.md"
+		},
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "your-username",
+			"repository": "your-repo",
+			"release": true,
+			"releaseTitle": "Release v${version}",
+			"releaseNotes": "## 🚀 新版本发布\n\n### 更新内容\n\n${changelog}\n\n---\n\n**完整更新日志**: [CHANGELOG.md](./CHANGELOG.md)\n\n**项目主页**: https://github.com/${repo.owner}/${repo.repository}",
+			"prerelease": false,
+			"draft": false,
+			"tokenRef": "GITEA_TOKEN",
+			"timeout": 30000
+		}
+	}
+}

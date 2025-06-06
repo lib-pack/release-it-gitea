@@ -1,48 +1,191 @@
-<h1 align="center">release-it-gitea</h1>
+# release-it-gitea
 
-<p align="center">release-it gitea plugin</p>
+一个用于 [release-it](https://github.com/release-it/release-it) 的 Gitea 插件，可以在生成版本和 changelog 后自动将它们推送到指定的 Gitea 服务器的仓库发布中。
 
-<p align="center">
-	<!-- prettier-ignore-start -->
-	<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-	<a href="#contributors" target="_blank"><img alt="👪 All Contributors: 2" src="https://img.shields.io/badge/%F0%9F%91%AA_all_contributors-2-21bb42.svg" /></a>
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
-	<!-- prettier-ignore-end -->
-	<a href="https://github.com/lib-pack/release-it-gitea/blob/main/.github/CODE_OF_CONDUCT.md" target="_blank"><img alt="🤝 Code of Conduct: Kept" src="https://img.shields.io/badge/%F0%9F%A4%9D_code_of_conduct-kept-21bb42" /></a>
-	<a href="https://codecov.io/gh/lib-pack/release-it-gitea" target="_blank"><img alt="🧪 Coverage" src="https://img.shields.io/codecov/c/github/lib-pack/release-it-gitea?label=%F0%9F%A7%AA%20coverage" /></a>
-	<a href="https://github.com/lib-pack/release-it-gitea/blob/main/LICENSE.md" target="_blank"><img alt="📝 License: MIT" src="https://img.shields.io/badge/%F0%9F%93%9D_license-MIT-21bb42.svg" /></a>
-	<a href="http://npmjs.com/package/release-it-gitea" target="_blank"><img alt="📦 npm version" src="https://img.shields.io/npm/v/release-it-gitea?color=21bb42&label=%F0%9F%93%A6%20npm" /></a>
-	<img alt="💪 TypeScript: Strict" src="https://img.shields.io/badge/%F0%9F%92%AA_typescript-strict-21bb42.svg" />
-</p>
+## 功能特性
 
-## Usage
+- ✅ 自动创建 Gitea 发布
+- ✅ 支持自定义发布标题和说明
+- ✅ 支持预发布和草稿发布
+- ✅ 支持模板变量替换
+- ✅ 自动检测并更新已存在的发布
+- ✅ 完整的错误处理和日志记录
+- ✅ TypeScript 支持
 
-## Development
+## 安装
 
-See [`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md), then [`.github/DEVELOPMENT.md`](./.github/DEVELOPMENT.md).
-Thanks! 💖
+```bash
+npm install --save-dev release-it-gitea
+# 或
+pnpm add -D release-it-gitea
+# 或
+yarn add -D release-it-gitea
+```
 
-## Contributors
+## 配置
 
-<!-- spellchecker: disable -->
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center"><img src="https://avatars.githubusercontent.com/u/39021696?v=4?s=100" width="100px;" alt="Lyda"/><br /><sub><b>Lyda</b></sub><br /><a href="https://github.com/lib-pack/release-it-gitea/commits?author=Lydanne" title="Code">💻</a> <a href="#content-Lydanne" title="Content">🖋</a> <a href="https://github.com/lib-pack/release-it-gitea/commits?author=Lydanne" title="Documentation">📖</a> <a href="#ideas-Lydanne" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-Lydanne" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-Lydanne" title="Maintenance">🚧</a> <a href="#projectManagement-Lydanne" title="Project Management">📆</a> <a href="#tool-Lydanne" title="Tools">🔧</a></td>
-      <td align="center"><a href="https://github.com/lib-pack"><img src="https://avatars.githubusercontent.com/u/141385953?v=4?s=100" width="100px;" alt="lib-pack"/><br /><sub><b>lib-pack</b></sub></a><br /><a href="https://github.com/lib-pack/release-it-gitea/commits?author=lib-pack" title="Code">💻</a> <a href="#content-lib-pack" title="Content">🖋</a> <a href="https://github.com/lib-pack/release-it-gitea/commits?author=lib-pack" title="Documentation">📖</a> <a href="#ideas-lib-pack" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-lib-pack" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-lib-pack" title="Maintenance">🚧</a> <a href="#projectManagement-lib-pack" title="Project Management">📆</a> <a href="#tool-lib-pack" title="Tools">🔧</a></td>
-    </tr>
-  </tbody>
-</table>
+### 1. 设置环境变量
 
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
+首先，你需要设置 Gitea API token：
 
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-<!-- spellchecker: enable -->
+```bash
+export GITEA_TOKEN="your-gitea-api-token"
+```
 
-<!-- You can remove this notice if you don't want it 🙂 no worries! -->
+### 2. 配置 release-it
 
-> 💝 This package was templated with [`create-typescript-app`](https://github.com/JoshuaKGoldberg/create-typescript-app) using the [Bingo framework](https://create.bingo).
+在你的 `.release-it.json` 文件中添加插件配置：
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "your-username",
+			"repository": "your-repo",
+			"release": true,
+			"releaseTitle": "v${version}",
+			"releaseNotes": "${changelog}",
+			"prerelease": false,
+			"draft": false
+		}
+	}
+}
+```
+
+或者在 `package.json` 中：
+
+```json
+{
+	"release-it": {
+		"plugins": {
+			"release-it-gitea": {
+				"host": "https://gitea.example.com",
+				"owner": "your-username",
+				"repository": "your-repo",
+				"release": true
+			}
+		}
+	}
+}
+```
+
+## 配置选项
+
+| 选项           | 类型      | 默认值                 | 描述                 |
+| -------------- | --------- | ---------------------- | -------------------- |
+| `host`         | `string`  | **必需**               | Gitea 服务器 URL     |
+| `owner`        | `string`  | 从 git remote 自动检测 | 仓库所有者           |
+| `repository`   | `string`  | 从 git remote 自动检测 | 仓库名称             |
+| `release`      | `boolean` | `true`                 | 是否创建发布         |
+| `releaseTitle` | `string`  | `"v${version}"`        | 发布标题模板         |
+| `releaseNotes` | `string`  | `"${changelog}"`       | 发布说明模板         |
+| `prerelease`   | `boolean` | `false`                | 是否为预发布         |
+| `draft`        | `boolean` | `false`                | 是否为草稿           |
+| `tokenRef`     | `string`  | `"GITEA_TOKEN"`        | API token 环境变量名 |
+| `timeout`      | `number`  | `30000`                | 请求超时时间（毫秒） |
+
+## 模板变量
+
+在 `releaseTitle` 和 `releaseNotes` 中可以使用以下模板变量：
+
+- `${version}` - 当前版本号
+- `${latestVersion}` - 上一个版本号
+- `${changelog}` - 生成的 changelog
+- `${name}` - 项目名称
+- `${repo.owner}` - 仓库所有者
+- `${repo.repository}` - 仓库名称
+- `${branchName}` - 当前分支名
+
+## 使用示例
+
+### 基础配置
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com"
+		}
+	}
+}
+```
+
+### 完整配置
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "myorg",
+			"repository": "myproject",
+			"release": true,
+			"releaseTitle": "Release ${version}",
+			"releaseNotes": "## 更新内容\n\n${changelog}\n\n---\n\n完整更新日志请查看 [CHANGELOG.md](./CHANGELOG.md)",
+			"prerelease": false,
+			"draft": false,
+			"tokenRef": "GITEA_TOKEN",
+			"timeout": 30000
+		}
+	}
+}
+```
+
+### 预发布配置
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"releaseTitle": "v${version} (预发布)",
+			"prerelease": true
+		}
+	}
+}
+```
+
+## 工作流程
+
+1. **初始化阶段** - 验证配置和 API 连接
+2. **发布阶段** - 创建或更新 Gitea 发布
+3. **发布后阶段** - 显示发布链接
+
+## 错误处理
+
+插件包含完整的错误处理：
+
+- 配置验证
+- API token 验证
+- 网络连接检查
+- API 请求错误处理
+- 详细的错误日志
+
+## 开发
+
+```bash
+# 克隆仓库
+git clone https://github.com/lib-pack/release-it-gitea.git
+cd release-it-gitea
+
+# 安装依赖
+pnpm install
+
+# 构建
+pnpm build
+
+# 运行测试
+pnpm test
+
+# 代码检查
+pnpm lint
+```
+
+## 许可证
+
+MIT
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
