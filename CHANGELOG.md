@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.3.0](https://github.com/lib-pack/release-it-gitea/compare/1.2.1...1.3.0) (2025-06-06)
+
+### Features
+
+- 更新 Gitea 插件的类型定义，添加 getContext 和 setContext 方法，优化测试用例以支持新的配置逻辑 ([7d8c56c](https://github.com/lib-pack/release-it-gitea/commit/7d8c56c3495c50f8a6072d2793d1305e93ac4649))
+
 ## [1.2.1](https://github.com/lib-pack/release-it-gitea/compare/1.2.0...1.2.1) (2025-06-06)
 
 ### Bug Fixes
