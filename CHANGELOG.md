@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.3](https://github.com/lib-pack/release-it-gitea/compare/1.3.2...1.3.3) (2025-06-06)
+
+### Bug Fixes
+
+- 更新 Gitea 插件的配置逻辑，修正 host 和 repository 的默认值，确保更准确的上下文获取 ([01161e2](https://github.com/lib-pack/release-it-gitea/commit/01161e2667b721d9a238ba4c4e6444e9acde8f65))
+
 ## [1.3.2](https://github.com/lib-pack/release-it-gitea/compare/1.3.1...1.3.2) (2025-06-06)
 
 ### Bug Fixes
