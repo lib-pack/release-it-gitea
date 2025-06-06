@@ -1,0 +1,30 @@
+{
+	"git": {
+		"commitMessage": "chore: release v${version}",
+		"requireCommits": true
+	},
+	"npm": {
+		"publish": false
+	},
+	"github": {
+		"release": false
+	},
+	"plugins": {
+		"@release-it/conventional-changelog": {
+			"preset": "angular",
+			"infile": "CHANGELOG.md"
+		},
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "myorg",
+			"repository": "myproject",
+			"release": true,
+			"releaseTitle": "🚀 ${name} v${version}",
+			"releaseNotes": "## 📋 更新内容\n\n${changelog}\n\n---\n\n**完整更新日志**: [CHANGELOG.md](./CHANGELOG.md)",
+			"prerelease": false,
+			"draft": false,
+			"tokenRef": "GITEA_TOKEN",
+			"timeout": 30000
+		}
+	}
+}

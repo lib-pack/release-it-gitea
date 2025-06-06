@@ -26,6 +26,7 @@
 	],
 	"scripts": {
 		"build": "tsup",
+		"demo": "node scripts/demo.js",
 		"format": "prettier .",
 		"lint": "eslint . --max-warnings 0",
 		"lint:knip": "knip",
@@ -34,6 +35,9 @@
 		"lint:spelling": "cspell \"**\" \".github/**/*\"",
 		"prepare": "husky",
 		"test": "vitest",
+		"test:e2e": "vitest run test/",
+		"test:manual": "node scripts/test-manual.js",
+		"test:unit": "vitest run src/",
 		"tsc": "tsc"
 	},
 	"lint-staged": {

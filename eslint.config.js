@@ -13,7 +13,18 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
 	{
-		ignores: ["**/*.snap", "coverage", "lib", "node_modules", "pnpm-lock.yaml"],
+		ignores: [
+			"**/*.snap",
+			"coverage",
+			"lib",
+			"node_modules",
+			"pnpm-lock.yaml",
+			"**/*.config.*",
+			"**/*.md",
+			"**/*.test.*",
+			"**/*.js",
+			"test",
+		],
 	},
 	{ linterOptions: { reportUnusedDisableDirectives: "error" } },
 	eslint.configs.recommended,
@@ -32,7 +43,7 @@ export default tseslint.config(
 			tseslint.configs.strictTypeChecked,
 			tseslint.configs.stylisticTypeChecked,
 		],
-		files: ["**/*.{js,ts}"],
+		files: ["**/*.ts"],
 		languageOptions: {
 			parserOptions: {
 				projectService: { allowDefaultProject: ["*.config.*s"] },
@@ -40,27 +51,27 @@ export default tseslint.config(
 			},
 		},
 		rules: {
+			// 放宽 ESLint 注释规则
+			"@eslint-community/eslint-comments/disable-enable-pair": "warn",
+			// 放宽 TypeScript 规则
+			"@typescript-eslint/no-unnecessary-condition": "off",
+			"@typescript-eslint/prefer-nullish-coalescing": "warn",
+			// 放宽 JSDoc 规则
+			"jsdoc/check-param-names": "warn",
+
+			"jsdoc/informative-docs": "off",
+			"jsdoc/match-description": "off",
 			// Stylistic concerns that don't interfere with Prettier
 			"logical-assignment-operators": [
 				"error",
 				"always",
 				{ enforceForIfStatements: true },
 			],
+
 			"no-useless-rename": "error",
 			"object-shorthand": "error",
+
 			"operator-assignment": "error",
-
-			// 放宽 JSDoc 规则
-			"jsdoc/check-param-names": "warn",
-			"jsdoc/informative-docs": "off",
-			"jsdoc/match-description": "off",
-
-			// 放宽 TypeScript 规则
-			"@typescript-eslint/no-unnecessary-condition": "off",
-			"@typescript-eslint/prefer-nullish-coalescing": "warn",
-
-			// 放宽 ESLint 注释规则
-			"@eslint-community/eslint-comments/disable-enable-pair": "warn",
 		},
 		settings: {
 			perfectionist: { partitionByComment: true, type: "natural" },

@@ -1,0 +1,24 @@
+{
+	"$schema": "https://unpkg.com/release-it@19/schema/release-it.json",
+	"git": {
+		"commitMessage": "chore: release v${version}",
+		"requireCommits": false,
+		"requireCleanWorkingDir": false
+	},
+	"npm": {
+		"publish": false
+	},
+	"github": {
+		"release": false
+	},
+	"plugins": {
+		"../../lib/index.js": {
+			"host": "https://gitea.example.com",
+			"release": true,
+			"releaseTitle": "🧪 ${name} v${version} (预发布)",
+			"releaseNotes": "## ⚠️ 预发布版本\n\n这是一个预发布版本，可能包含不稳定的功能。\n\n### 更新内容\n\n${changelog}",
+			"prerelease": true,
+			"draft": false
+		}
+	}
+}
