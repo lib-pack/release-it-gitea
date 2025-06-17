@@ -54,6 +54,7 @@ class GiteaPlugin extends Plugin {
 
 		// 设置默认值
 		const config: GiteaConfig = {
+			assets: gitea.assets ?? [],
 			draft: gitea.draft ?? false,
 			host: gitea.host ?? repo.host,
 			owner: gitea.owner ?? repo.owner,
