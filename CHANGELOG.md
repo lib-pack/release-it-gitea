@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1](https://github.com/lib-pack/release-it-gitea/compare/1.4.0...1.4.1) (2025-06-17)
+
+### Bug Fixes
+
+- 更新 Gitea 插件的配置，确保在未提供资产时使用空数组作为默认值 ([10ccbea](https://github.com/lib-pack/release-it-gitea/commit/10ccbea6b66d6b180639c1d28dd3bbc871f049e7))
+
 # [1.4.0](https://github.com/lib-pack/release-it-gitea/compare/1.3.3...1.4.0) (2025-06-17)
 
 ### Features
