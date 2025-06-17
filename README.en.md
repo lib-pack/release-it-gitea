@@ -92,7 +92,7 @@ npx release-it
 				"README.md",
 				{
 					"path": "dist/**/*",
-					"name": "distribution-${version}.zip",
+					"name": "distribution-file.zip",
 					"type": "zip",
 					"label": "Distribution Files"
 				}
@@ -138,7 +138,7 @@ Use object format for more detailed configuration:
 		},
 		{
 			"path": "src",
-			"name": "source-code-${version}.zip",
+			"name": "source-code-file.zip",
 			"type": "zip",
 			"label": "Source Code"
 		}
@@ -177,7 +177,7 @@ Use object format for more detailed configuration:
 	"assets": [
 		{
 			"path": "src/**/*",
-			"name": "source-v${version}.zip",
+			"name": "source-vfile.zip",
 			"type": "zip",
 			"label": "Source Code"
 		}
@@ -213,13 +213,13 @@ Use object format for more detailed configuration:
 	"assets": [
 		{
 			"path": "dist/prod/**/*",
-			"name": "production-build-${version}.zip",
+			"name": "production-build-file.zip",
 			"type": "zip",
 			"label": "Production Build"
 		},
 		{
 			"path": "dist/dev/**/*",
-			"name": "development-build-${version}.zip",
+			"name": "development-build-file.zip",
 			"type": "zip",
 			"label": "Development Build"
 		}
@@ -249,7 +249,7 @@ export MY_GITEA_TOKEN=your_gitea_api_token
 
 ## Template Variables
 
-The following variables can be used in `releaseTitle`, `releaseNotes`, and asset `name`:
+The following variables can be used in `releaseTitle` and `releaseNotes`:
 
 | Variable             | Description      | Example              |
 | -------------------- | ---------------- | -------------------- |
@@ -270,13 +270,15 @@ The following variables can be used in `releaseTitle`, `releaseNotes`, and asset
 	"assets": [
 		{
 			"path": "dist/**/*",
-			"name": "${name}-${version}-dist.zip",
+			"name": "distribution-files.zip",
 			"type": "zip",
-			"label": "${name} v${version} Distribution"
+			"label": "Distribution Files"
 		}
 	]
 }
 ```
+
+> **Note**: The `name` and `label` fields in asset configuration do not support template variable substitution and require static strings.
 
 ## Troubleshooting
 

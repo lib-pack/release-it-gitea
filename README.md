@@ -92,7 +92,7 @@ npx release-it
 				"README.md",
 				{
 					"path": "dist/**/*",
-					"name": "distribution-${version}.zip",
+					"name": "distribution-file.zip",
 					"type": "zip",
 					"label": "Distribution Files"
 				}
@@ -138,7 +138,7 @@ npx release-it
 		},
 		{
 			"path": "src",
-			"name": "source-code-${version}.zip",
+			"name": "source-code-file.zip",
 			"type": "zip",
 			"label": "Source Code"
 		}
@@ -177,7 +177,7 @@ npx release-it
 	"assets": [
 		{
 			"path": "src/**/*",
-			"name": "source-v${version}.zip",
+			"name": "source-vfile.zip",
 			"type": "zip",
 			"label": "Source Code"
 		}
@@ -213,13 +213,13 @@ npx release-it
 	"assets": [
 		{
 			"path": "dist/prod/**/*",
-			"name": "production-build-${version}.zip",
+			"name": "production-build-file.zip",
 			"type": "zip",
 			"label": "Production Build"
 		},
 		{
 			"path": "dist/dev/**/*",
-			"name": "development-build-${version}.zip",
+			"name": "development-build-file.zip",
 			"type": "zip",
 			"label": "Development Build"
 		}
@@ -249,7 +249,7 @@ export MY_GITEA_TOKEN=your_gitea_api_token
 
 ## 模板变量
 
-在 `releaseTitle`、`releaseNotes` 和附件 `name` 中可以使用以下变量：
+在 `releaseTitle` 和 `releaseNotes` 中可以使用以下变量：
 
 | 变量                 | 描述         | 示例                 |
 | -------------------- | ------------ | -------------------- |
@@ -270,13 +270,15 @@ export MY_GITEA_TOKEN=your_gitea_api_token
 	"assets": [
 		{
 			"path": "dist/**/*",
-			"name": "${name}-${version}-dist.zip",
+			"name": "distribution-files.zip",
 			"type": "zip",
-			"label": "${name} v${version} Distribution"
+			"label": "Distribution Files"
 		}
 	]
 }
 ```
+
+> **注意**: 附件配置中的 `name` 和 `label` 字段不支持模板变量替换，需要使用静态字符串。
 
 ## 故障排除
 
