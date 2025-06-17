@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.5.0](https://github.com/lib-pack/release-it-gitea/compare/1.4.1...1.5.0) (2025-06-17)
+
+### Features
+
+- 在 Gitea 插件中添加资产上传功能，支持多种文件类型的压缩和上传，更新配置以包含资产信息 ([364f8a2](https://github.com/lib-pack/release-it-gitea/commit/364f8a28a536332b846a9e9620cd9cb2e8c0b69a))
+
 ## [1.4.1](https://github.com/lib-pack/release-it-gitea/compare/1.4.0...1.4.1) (2025-06-17)
 
 ### Bug Fixes
