@@ -54,6 +54,21 @@ declare module "release-it" {
 	}
 }
 
+/** 附件配置接口 */
+interface GiteaAssetConfig {
+	/** 文件或文件夹路径，支持通配符 */
+	path: string;
+
+	/** 上传后的文件名，如果不指定则使用原文件名 */
+	name?: string;
+
+	/** 文件类型：'file' 表示单个文件，'zip' 表示打包成 zip 文件 */
+	type?: "file" | "zip";
+
+	/** 文件标签，用于标识文件用途 */
+	label?: string;
+}
+
 interface GiteaConfig {
 	/** Gitea 服务器的完整 URL 地址 */
 	host: string;
@@ -84,4 +99,7 @@ interface GiteaConfig {
 
 	/** API 请求的超时时间，单位为毫秒 */
 	timeout?: number;
+
+	/** 要上传的附件列表 */
+	assets?: (GiteaAssetConfig | string)[];
 }

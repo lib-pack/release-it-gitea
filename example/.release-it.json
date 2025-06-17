@@ -1,0 +1,54 @@
+{
+	"git": {
+		"commitMessage": "chore: release v${version}",
+		"tagName": "v${version}"
+	},
+	"npm": {
+		"publish": false
+	},
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "your-username",
+			"repository": "your-repo",
+			"releaseTitle": "Release v${version}",
+			"releaseNotes": "## 🚀 新版本发布 v${version}\n\n### 📋 更新内容\n\n${changelog}\n\n### 📦 下载附件\n\n- **构建产物**: 包含编译后的 JavaScript 和 CSS 文件\n- **源代码**: 完整的项目源代码压缩包\n- **文档**: 项目文档和说明文件\n\n---\n\n完整更新日志请查看 [CHANGELOG.md](./CHANGELOG.md)",
+			"prerelease": false,
+			"draft": false,
+			"assets": [
+				{
+					"path": "dist/**/*",
+					"name": "build-v${version}.zip",
+					"type": "zip",
+					"label": "构建产物"
+				},
+				{
+					"path": "src/**/*",
+					"name": "source-code-v${version}.zip",
+					"type": "zip",
+					"label": "源代码"
+				},
+				{
+					"path": "README.md",
+					"type": "file",
+					"label": "项目说明"
+				},
+				{
+					"path": "CHANGELOG.md",
+					"type": "file",
+					"label": "更新日志"
+				},
+				{
+					"path": "docs/**/*.md",
+					"type": "file",
+					"label": "文档"
+				},
+				{
+					"path": "package.json",
+					"type": "file",
+					"label": "包配置"
+				}
+			]
+		}
+	}
+}

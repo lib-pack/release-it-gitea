@@ -1,5 +1,11 @@
+import archiver from "archiver";
+import FormData from "form-data";
+import { createReadStream, createWriteStream, statSync } from "fs";
+import { glob } from "glob";
 import fetch from "node-fetch";
+import { basename, dirname, extname, join } from "path";
 import { Plugin } from "release-it";
+import { promisify } from "util";
 
 interface GiteaRelease {
 	body: string;
@@ -241,6 +247,226 @@ class GiteaPlugin extends Plugin {
 	}
 
 	/**
+	 * 解析附件配置，将字符串格式转换为标准配置对象
+	 * @param asset 附件配置
+	 * @returns 标准化的附件配置对象
+	 */
+	private normalizeAssetConfig(
+		asset: GiteaAssetConfig | string,
+	): GiteaAssetConfig {
+		if (typeof asset === "string") {
+			return {
+				path: asset,
+				type: "file",
+			};
+		}
+		return {
+			type: "file",
+			...asset,
+		};
+	}
+
+	/**
+	 * 根据路径模式匹配文件
+	 * @param pattern 文件路径模式，支持通配符
+	 * @returns 匹配到的文件路径数组
+	 */
+	private async resolveFiles(pattern: string): Promise<string[]> {
+		try {
+			const files = await glob(pattern, {
+				absolute: true,
+				nodir: true,
+			});
+			return files;
+		} catch (error) {
+			this.log.warn(`文件匹配失败: ${pattern}, 错误: ${error}`);
+			return [];
+		}
+	}
+
+	/**
+	 * 创建 ZIP 压缩包
+	 * @param files 要压缩的文件列表
+	 * @param outputPath 输出的 ZIP 文件路径
+	 * @param basePath 基础路径，用于确定文件在压缩包中的相对路径
+	 * @returns Promise&lt;void>
+	 */
+	private async createZipArchive(
+		files: string[],
+		outputPath: string,
+		basePath?: string,
+	): Promise<void> {
+		return new Promise((resolve, reject) => {
+			const output = createWriteStream(outputPath);
+			const archive = archiver("zip", {
+				zlib: { level: 9 },
+			});
+
+			output.on("close", () => {
+				this.log.verbose(
+					`ZIP 文件创建完成: ${outputPath} (${archive.pointer()} bytes)`,
+				);
+				resolve();
+			});
+
+			archive.on("error", (err) => {
+				reject(err);
+			});
+
+			archive.pipe(output);
+
+			// 添加文件到压缩包
+			for (const file of files) {
+				const stats = statSync(file);
+				if (stats.isFile()) {
+					const relativePath = basePath
+						? file.replace(basePath, "").replace(/^\//, "")
+						: basename(file);
+					archive.file(file, { name: relativePath });
+				}
+			}
+
+			archive.finalize();
+		});
+	}
+
+	/**
+	 * 上传单个附件到 Gitea 发布
+	 * @param releaseId 发布 ID
+	 * @param filePath 文件路径
+	 * @param fileName 上传后的文件名
+	 * @param label 文件标签
+	 * @returns 上传结果
+	 */
+	private async uploadAsset(
+		releaseId: number,
+		filePath: string,
+		fileName: string,
+		label?: string,
+	): Promise<unknown> {
+		const url = this.buildApiUrl(
+			`/repos/${this.giteaConfig.owner}/${this.giteaConfig.repository}/releases/${releaseId}/assets`,
+		);
+		const token = this.getToken();
+
+		const form = new FormData();
+		form.append("attachment", createReadStream(filePath), {
+			contentType: "application/octet-stream",
+			filename: fileName,
+		});
+
+		if (label) {
+			form.append("name", label);
+		}
+
+		const requestOptions = {
+			body: form,
+			headers: {
+				...form.getHeaders(),
+				Authorization: `token ${token}`,
+			},
+			method: "POST",
+			timeout: this.giteaConfig.timeout,
+		};
+
+		this.log.verbose(`上传附件: ${fileName} 到发布 ${releaseId}`);
+
+		try {
+			const response = await fetch(url, requestOptions);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`附件上传失败 (${response.status}): ${errorText}`);
+			}
+
+			const result = await response.json();
+			this.log.info(`✅ 附件上传成功: ${fileName}`);
+			return result;
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`附件上传失败: ${error.message}`);
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * 处理并上传所有配置的附件
+	 * @param releaseId 发布 ID
+	 */
+	private async uploadAssets(releaseId: number): Promise<void> {
+		const assets = this.giteaConfig.assets;
+		if (!assets || assets.length === 0) {
+			this.log.verbose("没有配置附件，跳过上传");
+			return;
+		}
+
+		this.log.info(`开始上传 ${assets.length} 个附件...`);
+
+		for (const asset of assets) {
+			try {
+				const config = this.normalizeAssetConfig(asset);
+				await this.processAsset(releaseId, config);
+			} catch (error) {
+				this.log.error(
+					`附件处理失败: ${JSON.stringify(asset)}, 错误: ${error}`,
+				);
+				// 继续处理其他附件，不中断整个流程
+			}
+		}
+
+		this.log.info("✅ 所有附件处理完成");
+	}
+
+	/**
+	 * 处理单个附件配置
+	 * @param releaseId 发布 ID
+	 * @param config 附件配置
+	 */
+	private async processAsset(
+		releaseId: number,
+		config: GiteaAssetConfig,
+	): Promise<void> {
+		const files = await this.resolveFiles(config.path);
+
+		if (files.length === 0) {
+			this.log.warn(`没有找到匹配的文件: ${config.path}`);
+			return;
+		}
+
+		if (config.type === "zip") {
+			// 打包成 ZIP 文件
+			const zipName = config.name || `${basename(config.path)}.zip`;
+			const tempZipPath = join(process.cwd(), ".temp", zipName);
+
+			// 确保临时目录存在
+			const { mkdirSync } = await import("fs");
+			try {
+				mkdirSync(dirname(tempZipPath), { recursive: true });
+			} catch (error) {
+				// 目录可能已存在，忽略错误
+			}
+
+			await this.createZipArchive(files, tempZipPath, dirname(config.path));
+			await this.uploadAsset(releaseId, tempZipPath, zipName, config.label);
+
+			// 清理临时文件
+			const { unlinkSync } = await import("fs");
+			try {
+				unlinkSync(tempZipPath);
+			} catch (error) {
+				this.log.warn(`清理临时文件失败: ${tempZipPath}`);
+			}
+		} else {
+			// 上传单个文件
+			for (const file of files) {
+				const fileName = config.name || basename(file);
+				await this.uploadAsset(releaseId, file, fileName, config.label);
+			}
+		}
+	}
+
+	/**
 	 * 执行发布操作，创建或更新 Gitea 发布.
 	 * @throws 当发布创建失败时抛出错误
 	 */
@@ -282,6 +508,11 @@ class GiteaPlugin extends Plugin {
 			}
 
 			this.log.info(`✅ Gitea 发布创建成功: ${release.html_url}`);
+
+			// 上传附件
+			if (this.giteaConfig.assets && this.giteaConfig.assets.length > 0) {
+				await this.uploadAssets(release.id);
+			}
 
 			// 设置发布 URL 到上下文中，供其他插件使用
 			this.config.setContext("releaseUrl", release.html_url);

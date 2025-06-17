@@ -44,12 +44,16 @@
 		"*": "prettier --ignore-unknown --write"
 	},
 	"dependencies": {
+		"archiver": "^7.0.1",
+		"form-data": "^4.0.3",
+		"glob": "^11.0.3",
 		"node-fetch": "^3.3.2"
 	},
 	"devDependencies": {
 		"@eslint-community/eslint-plugin-eslint-comments": "4.5.0",
 		"@eslint/js": "9.22.0",
 		"@release-it/conventional-changelog": "10.0.0",
+		"@types/archiver": "^6.0.3",
 		"@types/eslint-plugin-markdown": "2.0.2",
 		"@types/node": "22.13.10",
 		"@types/node-fetch": "^2.6.11",
