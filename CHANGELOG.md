@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.4.0](https://github.com/lib-pack/release-it-gitea/compare/1.3.3...1.4.0) (2025-06-17)
+
+### Features
+
+- 添加附件上传功能到 Gitea 插件，支持文件和文件夹的压缩上传，增强配置选项和示例 ([994c201](https://github.com/lib-pack/release-it-gitea/commit/994c2017ad735a4114112d741e1262419643589b))
+
 ## [1.3.3](https://github.com/lib-pack/release-it-gitea/compare/1.3.2...1.3.3) (2025-06-06)
 
 ### Bug Fixes
