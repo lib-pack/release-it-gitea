@@ -1,5 +1,16 @@
 import type { Config, Context } from "release-it";
 import fetch from "node-fetch";
+import { glob } from "glob";
+import {
+	statSync,
+	createReadStream,
+	createWriteStream,
+	mkdirSync,
+	unlinkSync,
+} from "fs";
+import { join, dirname, basename } from "path";
+import archiver from "archiver";
+import FormData from "form-data";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,6 +29,16 @@ interface GiteaPluginWithPrivates {
 	releaseExists: (tagName: string) => Promise<boolean>;
 	createRelease: (releaseData: any) => Promise<any>;
 	updateRelease: (tagName: string, releaseData: any) => Promise<any>;
+	uploadAssets: (releaseId: number) => Promise<void>;
+	processAsset: (releaseId: number, config: GiteaAssetConfig) => Promise<void>;
+	uploadAsset: (
+		releaseId: number,
+		filePath: string,
+		fileName: string,
+		label?: string,
+	) => Promise<unknown>;
+	normalizeAssetConfig: (asset: GiteaAssetConfig | string) => GiteaAssetConfig;
+	resolveFiles: (pattern: string) => Promise<string[]>;
 }
 
 // Mock node-fetch
@@ -26,6 +47,43 @@ vi.mock("node-fetch", () => ({
 }));
 
 const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
+
+// Mock fs functions
+vi.mock("fs", () => ({
+	statSync: vi.fn(),
+	createReadStream: vi.fn(),
+	createWriteStream: vi.fn(),
+	mkdirSync: vi.fn(),
+	unlinkSync: vi.fn(),
+}));
+
+// Mock glob
+vi.mock("glob", () => ({
+	glob: vi.fn(),
+}));
+
+// Mock archiver
+vi.mock("archiver", () => ({
+	default: vi.fn(),
+}));
+
+// Mock form-data
+vi.mock("form-data", () => ({
+	default: vi.fn(),
+}));
+
+const mockGlob = glob as unknown as ReturnType<typeof vi.fn>;
+const mockStatSync = statSync as unknown as ReturnType<typeof vi.fn>;
+const mockCreateReadStream = createReadStream as unknown as ReturnType<
+	typeof vi.fn
+>;
+const mockCreateWriteStream = createWriteStream as unknown as ReturnType<
+	typeof vi.fn
+>;
+const mockMkdirSync = mkdirSync as unknown as ReturnType<typeof vi.fn>;
+const mockUnlinkSync = unlinkSync as unknown as ReturnType<typeof vi.fn>;
+const mockArchiver = archiver as unknown as ReturnType<typeof vi.fn>;
+const mockFormData = FormData as unknown as ReturnType<typeof vi.fn>;
 
 // Mock release-it Plugin base class
 vi.mock("release-it", () => ({
@@ -161,6 +219,7 @@ describe("GiteaPlugin", () => {
 			const config = (plugin as unknown as GiteaPluginWithPrivates).giteaConfig;
 
 			expect(config).toEqual({
+				assets: [],
 				draft: false,
 				host: "https://gitea.example.com",
 				owner: "testowner",
@@ -699,6 +758,303 @@ describe("GiteaPlugin", () => {
 			await plugin.afterRelease();
 
 			expect(plugin.log.info).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("uploadAssets", () => {
+		let pluginWithPrivates: GiteaPluginWithPrivates;
+
+		beforeEach(() => {
+			pluginWithPrivates = plugin as unknown as GiteaPluginWithPrivates;
+			// Reset all mocks
+			vi.clearAllMocks();
+		});
+
+		it("should skip upload when no assets are configured", async () => {
+			// Mock giteaConfig to return empty assets
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: [],
+				}),
+				configurable: true,
+			});
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			expect(plugin.log.verbose).toHaveBeenCalledWith("没有配置附件，跳过上传");
+		});
+
+		it("should skip upload when assets is undefined", async () => {
+			// Mock giteaConfig to return undefined assets
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: undefined,
+				}),
+				configurable: true,
+			});
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			expect(plugin.log.verbose).toHaveBeenCalledWith("没有配置附件，跳过上传");
+		});
+
+		it("should process single file asset successfully", async () => {
+			const mockAssets = [
+				{
+					path: "dist/app.js",
+					name: "application.js",
+					type: "file" as const,
+					label: "Main App",
+				},
+			];
+
+			// Mock giteaConfig
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: mockAssets,
+					tokenRef: "GITEA_TOKEN",
+					timeout: 30000,
+				}),
+				configurable: true,
+			});
+
+			// Mock file system
+			mockGlob.mockResolvedValue(["dist/app.js"]);
+			mockStatSync.mockReturnValue({ isFile: () => true });
+
+			// Mock form data
+			const mockForm = {
+				append: vi.fn(),
+				getHeaders: vi.fn().mockReturnValue({}),
+			};
+			mockFormData.mockReturnValue(mockForm);
+			mockCreateReadStream.mockReturnValue({});
+
+			// Mock successful upload
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: () => Promise.resolve({ id: 1 }),
+			});
+
+			// Set environment variable
+			process.env.GITEA_TOKEN = "test-token";
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			expect(plugin.log.info).toHaveBeenCalledWith("开始上传 1 个附件...");
+			expect(plugin.log.info).toHaveBeenCalledWith("✅ 所有附件处理完成");
+		});
+
+		it("should process zip asset with optimized directory structure", async () => {
+			const mockAssets = [
+				{
+					path: "dist/**/*.map",
+					name: "sourcemap.zip",
+					type: "zip" as const,
+				},
+			];
+
+			// Mock giteaConfig
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: mockAssets,
+					tokenRef: "GITEA_TOKEN",
+					timeout: 30000,
+				}),
+				configurable: true,
+			});
+
+			// Mock file system
+			mockGlob.mockResolvedValue([
+				"/xgj/project/dist/js/app.js.map",
+				"/xgj/project/dist/css/style.css.map",
+			]);
+			mockStatSync.mockReturnValue({ isFile: () => true });
+
+			// Mock archiver
+			const mockArchive = {
+				file: vi.fn(),
+				pipe: vi.fn(),
+				finalize: vi.fn(),
+				pointer: vi.fn().mockReturnValue(1024),
+				on: vi.fn((event, callback) => {
+					if (event === "error") {
+						// Store error callback for later use
+					}
+				}),
+			};
+			mockArchiver.mockReturnValue(mockArchive);
+
+			// Mock write stream
+			const mockWriteStream = {
+				on: vi.fn((event, callback) => {
+					if (event === "close") {
+						// Simulate successful zip creation
+						setTimeout(callback, 0);
+					}
+				}),
+			};
+			mockCreateWriteStream.mockReturnValue(mockWriteStream);
+
+			// Mock form data
+			const mockForm = {
+				append: vi.fn(),
+				getHeaders: vi.fn().mockReturnValue({}),
+			};
+			mockFormData.mockReturnValue(mockForm);
+
+			// Mock successful upload
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: () => Promise.resolve({ id: 1 }),
+			});
+
+			// Set environment variable
+			process.env.GITEA_TOKEN = "test-token";
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			// Verify archive.file was called with correct paths
+			expect(mockArchive.file).toHaveBeenCalledWith(
+				"/xgj/project/dist/js/app.js.map",
+				{
+					name: "dist/js/app.js.map",
+				},
+			);
+			expect(mockArchive.file).toHaveBeenCalledWith(
+				"/xgj/project/dist/css/style.css.map",
+				{
+					name: "dist/css/style.css.map",
+				},
+			);
+
+			expect(plugin.log.info).toHaveBeenCalledWith("开始上传 1 个附件...");
+			expect(plugin.log.info).toHaveBeenCalledWith("✅ 所有附件处理完成");
+		});
+
+		it("should continue processing other assets when one fails", async () => {
+			const mockAssets = [
+				{
+					path: "nonexistent/file.txt",
+					type: "file" as const,
+				},
+				{
+					path: "dist/app.js",
+					type: "file" as const,
+				},
+			];
+
+			// Mock giteaConfig
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: mockAssets,
+					tokenRef: "GITEA_TOKEN",
+					timeout: 30000,
+				}),
+				configurable: true,
+			});
+
+			// Mock file system - first call fails, second succeeds
+			mockGlob
+				.mockResolvedValueOnce([]) // No files found for first asset
+				.mockResolvedValueOnce(["dist/app.js"]); // File found for second asset
+
+			mockStatSync.mockReturnValue({ isFile: () => true });
+
+			// Mock form data
+			const mockForm = {
+				append: vi.fn(),
+				getHeaders: vi.fn().mockReturnValue({}),
+			};
+			mockFormData.mockReturnValue(mockForm);
+			mockCreateReadStream.mockReturnValue({});
+
+			// Mock successful upload for second asset
+			mockFetch.mockResolvedValue({
+				ok: true,
+				json: () => Promise.resolve({ id: 1 }),
+			});
+
+			// Set environment variable
+			process.env.GITEA_TOKEN = "test-token";
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			// Should log warning for first asset
+			expect(plugin.log.warn).toHaveBeenCalledWith(
+				"没有找到匹配的文件: nonexistent/file.txt",
+			);
+
+			// Should continue with second asset
+			expect(plugin.log.info).toHaveBeenCalledWith("开始上传 2 个附件...");
+			expect(plugin.log.info).toHaveBeenCalledWith("✅ 所有附件处理完成");
+		});
+
+		it("should handle upload errors gracefully", async () => {
+			const mockAssets = [
+				{
+					path: "dist/app.js",
+					type: "file" as const,
+				},
+			];
+
+			// Mock giteaConfig
+			Object.defineProperty(pluginWithPrivates, "giteaConfig", {
+				get: () => ({
+					host: "https://gitea.example.com",
+					owner: "testowner",
+					repository: "testrepo",
+					assets: mockAssets,
+					tokenRef: "GITEA_TOKEN",
+					timeout: 30000,
+				}),
+				configurable: true,
+			});
+
+			// Mock file system
+			mockGlob.mockResolvedValue(["dist/app.js"]);
+			mockStatSync.mockReturnValue({ isFile: () => true });
+
+			// Mock form data
+			const mockForm = {
+				append: vi.fn(),
+				getHeaders: vi.fn().mockReturnValue({}),
+			};
+			mockFormData.mockReturnValue(mockForm);
+			mockCreateReadStream.mockReturnValue({});
+
+			// Mock failed upload
+			mockFetch.mockResolvedValue({
+				ok: false,
+				status: 500,
+				text: () => Promise.resolve("Server error"),
+			});
+
+			// Set environment variable
+			process.env.GITEA_TOKEN = "test-token";
+
+			await pluginWithPrivates.uploadAssets(123);
+
+			// Should log error but continue processing
+			expect(plugin.log.error).toHaveBeenCalledWith(
+				expect.stringContaining("附件处理失败"),
+			);
+			expect(plugin.log.info).toHaveBeenCalledWith("✅ 所有附件处理完成");
 		});
 	});
 });

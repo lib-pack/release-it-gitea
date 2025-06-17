@@ -24,7 +24,19 @@
 			"prerelease": false,
 			"draft": false,
 			"tokenRef": "GITEA_TOKEN",
-			"timeout": 30000
+			"timeout": 30000,
+			"assets": [
+				{
+					"path": "dist/**/*.map",
+					"name": "sourcemap.zip",
+					"type": "zip"
+				},
+				{
+					"path": "src/**/*.ts",
+					"name": "source-code.zip",
+					"type": "zip"
+				}
+			]
 		}
 	}
 }

@@ -321,7 +321,7 @@ class GiteaPlugin extends Plugin {
 				const stats = statSync(file);
 				if (stats.isFile()) {
 					const relativePath = basePath
-						? file.replace(basePath, "").replace(/^\//, "")
+						? join(basePath, file.split(basePath)[1])
 						: basename(file);
 					archive.file(file, { name: relativePath });
 				}
@@ -448,7 +448,11 @@ class GiteaPlugin extends Plugin {
 				// 目录可能已存在，忽略错误
 			}
 
-			await this.createZipArchive(files, tempZipPath, dirname(config.path));
+			await this.createZipArchive(
+				files,
+				tempZipPath,
+				dirname(config.path).replace(/\*/g, ""),
+			);
 			await this.uploadAsset(releaseId, tempZipPath, zipName, config.label);
 
 			// 清理临时文件
