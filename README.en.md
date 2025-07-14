@@ -57,19 +57,19 @@ npx release-it
 
 ### Basic Configuration Options
 
-| Option         | Type    | Default                     | Description                    |
-| -------------- | ------- | --------------------------- | ------------------------------ |
-| `host`         | string  | Current repository host     | Gitea server URL               |
-| `owner`        | string  | Auto-detect from git remote | Repository owner               |
-| `repository`   | string  | Auto-detect from git remote | Repository name                |
-| `release`      | boolean | `true`                      | Whether to create release      |
-| `releaseTitle` | string  | `"v${version}"`             | Release title template         |
-| `releaseNotes` | string  | `"${changelog}"`            | Release notes template         |
-| `prerelease`   | boolean | `false`                     | Whether it's a prerelease      |
-| `draft`        | boolean | `false`                     | Whether it's a draft           |
-| `tokenRef`     | string  | `"GITEA_TOKEN"`             | API token environment variable |
-| `timeout`      | number  | `30000`                     | Request timeout (milliseconds) |
-| `assets`       | array   | `[]`                        | Additional asset files         |
+| Option         | Type                          | Default                     | Description                                                                        |
+| -------------- | ----------------------------- | --------------------------- | ---------------------------------------------------------------------------------- |
+| `host`         | string                        | Current repository host     | Gitea server URL                                                                   |
+| `owner`        | string                        | Auto-detect from git remote | Repository owner                                                                   |
+| `repository`   | string                        | Auto-detect from git remote | Repository name                                                                    |
+| `release`      | boolean                       | `true`                      | Whether to create release                                                          |
+| `releaseTitle` | string \| (context) => string | `"v${version}"`             | Release title template, supports variables and function callbacks                  |
+| `releaseNotes` | string \| (context) => string | `"${changelog}"`            | Release notes template, supports variables, Markdown format and function callbacks |
+| `prerelease`   | boolean                       | `false`                     | Whether it's a prerelease                                                          |
+| `draft`        | boolean                       | `false`                     | Whether it's a draft                                                               |
+| `tokenRef`     | string                        | `"GITEA_TOKEN"`             | API token environment variable                                                     |
+| `timeout`      | number                        | `30000`                     | Request timeout (milliseconds)                                                     |
+| `assets`       | array                         | `[]`                        | Additional asset files                                                             |
 
 ### Complete Configuration Example
 
@@ -260,6 +260,147 @@ The following variables can be used in `releaseTitle` and `releaseNotes`:
 | `${repo.owner}`      | Repository owner | `username`           |
 | `${repo.repository}` | Repository name  | `my-repo`            |
 | `${branchName}`      | Branch name      | `main`               |
+
+### Function Callback Configuration
+
+In JavaScript configuration files, you can pass function callbacks for `releaseTitle` and `releaseNotes` for more flexible configuration:
+
+```js
+// .release-it.js
+module.exports = {
+	plugins: {
+		"release-it-gitea": {
+			host: "https://gitea.example.com",
+			owner: "your-username",
+			repository: "your-repo",
+			// Using a function to generate dynamic release titles
+			releaseTitle: (context) => {
+				const date = new Date().toISOString().split("T")[0];
+				return `🚀 ${context.name} v${context.version} (${date})`;
+			},
+			// Using a function to generate dynamic release notes
+			releaseNotes: (context) => {
+				const sections = context.changelog.split("\n## ");
+				const features = sections.find(
+					(s) => s.startsWith("Features") || s.startsWith("New Features"),
+				);
+				const fixes = sections.find(
+					(s) => s.startsWith("Bug Fixes") || s.startsWith("Fixes"),
+				);
+
+				return `## ${context.name} v${context.version} Release Notes
+        
+## ✨ New Features
+${features ? "## " + features : "None"}
+
+## 🐛 Bug Fixes
+${fixes ? "## " + fixes : "None"}
+
+## 📦 Installation
+\`\`\`
+npm install ${context.name}@${context.version}
+\`\`\``;
+			},
+			// Other configurations...
+		},
+	},
+};
+```
+
+Advantages of function callbacks:
+
+- Can perform complex logical processing
+- Can access the complete context object
+- Can dynamically generate content based on conditions
+- Can integrate external data or API results
+
+> **Note**: Function callbacks are only available when using JavaScript configuration files (such as `.release-it.js` or `.release-it.cjs`); string templates must be used in JSON configuration files.
+
+### Using NPM Packages
+
+`releaseTitle` and `releaseNotes` also support referencing external NPM packages using the `npm:` prefix to generate content:
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"releaseTitle": "npm:my-release-notes-generator",
+			"releaseNotes": "npm:my-changelog-formatter"
+		}
+	}
+}
+```
+
+How to use NPM packages:
+
+1. Create and publish an NPM package that exports the following methods:
+
+   ```js
+   // my-release-notes-generator package example
+   module.exports = {
+   	releaseTitle: function (context) {
+   		return `Release v${context.version} - ${new Date().toLocaleDateString()}`;
+   	},
+   	releaseNotes: function (context) {
+   		// Custom formatting logic
+   		return `# ${context.name} v${context.version}\n\n${context.changelog}`;
+   	},
+   };
+   ```
+
+2. Install the package:
+
+   ```bash
+   npm install --save-dev my-release-notes-generator
+   ```
+
+3. Reference in configuration:
+   ```json
+   {
+   	"releaseTitle": "npm:my-release-notes-generator",
+   	"releaseNotes": "npm:my-release-notes-generator"
+   }
+   ```
+
+Advantages of using NPM packages:
+
+- Can share the same release title and description format across multiple projects
+- Can maintain and update release format independently of the project
+- Supports more complex logic and dependencies
+- Can be used in JSON configurations, not limited to JavaScript configurations
+
+### Context Object Properties
+
+In function callbacks, you can access the following context object properties:
+
+| Property          | Type   | Description                     | Example Value                    |
+| ----------------- | ------ | ------------------------------- | -------------------------------- |
+| `version`         | string | Current version                 | `"1.2.3"`                        |
+| `latestVersion`   | string | Previous version                | `"1.2.2"`                        |
+| `changelog`       | string | Generated changelog content     | `"## Bug Fixes\n\n* Fixed..."`   |
+| `name`            | string | Project name                    | `"my-project"`                   |
+| `branchName`      | string | Current branch name             | `"main"`                         |
+| `releaseUrl`      | string | Release URL (only after update) | `"https://gitea.com/.../v1.2.3"` |
+| `repo`            | object | Repository related information  |                                  |
+| `repo.host`       | string | Repository host address         | `"gitea.example.com"`            |
+| `repo.owner`      | string | Repository owner                | `"username"`                     |
+| `repo.project`    | string | Project name                    | `"my-repo"`                      |
+| `repo.protocol`   | string | Repository protocol             | `"https"`                        |
+| `repo.remote`     | string | Remote repository name          | `"origin"`                       |
+| `repo.repository` | string | Repository name                 | `"my-repo"`                      |
+
+**Example: Using context properties to generate custom release titles**
+
+```js
+releaseTitle: (context) => {
+	const emoji = context.version.includes("beta")
+		? "🧪"
+		: context.version.includes("alpha")
+			? "🚧"
+			: "🚀";
+	return `${emoji} ${context.name} v${context.version} [${context.branchName}]`;
+};
+```
 
 ### Template Usage Example
 
