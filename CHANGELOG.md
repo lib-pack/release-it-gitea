@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.6.0](https://github.com/lib-pack/release-it-gitea/compare/1.5.0...1.6.0) (2025-07-14)
+
+### Features
+
+- 更新 Gitea 插件的配置，增强 releaseTitle 和 releaseNotes 的支持，允许使用函数作为模板 ([f786853](https://github.com/lib-pack/release-it-gitea/commit/f786853036ecc689a9362f45f8ffc3e115e847df))
+
 # [1.5.0](https://github.com/lib-pack/release-it-gitea/compare/1.4.1...1.5.0) (2025-06-17)
 
 ### Features
