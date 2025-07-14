@@ -469,7 +469,22 @@ class GiteaPlugin extends Plugin {
 	private getReleaseNotes(): string {
 		const releaseNotes = this.giteaConfig.releaseNotes;
 		if (typeof releaseNotes === "string") {
-			return this.interpolate(releaseNotes);
+			if (releaseNotes.startsWith("npm:")) {
+				const npmPackage = releaseNotes.slice(4);
+				try {
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					const npmHandler = require(npmPackage);
+					if (typeof npmHandler !== "function") {
+						throw new Error(`${npmPackage} not found npm`);
+					}
+					return npmHandler.releaseNotes(this.config.getContext());
+				} catch (error) {
+					console.error(error);
+					throw new Error(`${npmPackage} not found npm`);
+				}
+			} else {
+				return this.interpolate(releaseNotes);
+			}
 		} else if (typeof releaseNotes === "function") {
 			return releaseNotes(this.config.getContext());
 		}
@@ -479,7 +494,22 @@ class GiteaPlugin extends Plugin {
 	private getReleaseTitle(): string {
 		const releaseTitle = this.giteaConfig.releaseTitle;
 		if (typeof releaseTitle === "string") {
-			return this.interpolate(releaseTitle);
+			if (releaseTitle.startsWith("npm:")) {
+				const npmPackage = releaseTitle.slice(4);
+				try {
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					const npmHandler = require(npmPackage);
+					if (typeof npmHandler !== "function") {
+						throw new Error(`${npmPackage} not found npm`);
+					}
+					return npmHandler.releaseTitle(this.config.getContext());
+				} catch (error) {
+					console.error(error);
+					throw new Error(`${npmPackage} not found npm`);
+				}
+			} else {
+				return this.interpolate(releaseTitle);
+			}
 		} else if (typeof releaseTitle === "function") {
 			return releaseTitle(this.config.getContext());
 		}
