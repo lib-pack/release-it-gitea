@@ -108,7 +108,7 @@ vi.mock("release-it", () => ({
 			};
 		}
 
-		getContext(key?: string): any {
+		getContext(key: string): any {
 			return this.config.getContext(key);
 		}
 
@@ -250,7 +250,7 @@ describe("GiteaPlugin", () => {
 					owner: "testowner",
 					repository: "testrepo",
 				};
-			});
+			}) as any;
 
 			expect(
 				() => (plugin as unknown as GiteaPluginWithPrivates).giteaConfig,
@@ -266,7 +266,7 @@ describe("GiteaPlugin", () => {
 					host: "https://gitea.example.com",
 					repository: "testrepo",
 				};
-			});
+			}) as any;
 
 			expect(
 				() => (plugin as unknown as GiteaPluginWithPrivates).giteaConfig,
@@ -282,7 +282,7 @@ describe("GiteaPlugin", () => {
 					host: "https://gitea.example.com",
 					owner: "testowner",
 				};
-			});
+			}) as any;
 
 			expect(
 				() => (plugin as unknown as GiteaPluginWithPrivates).giteaConfig,

@@ -226,17 +226,7 @@ class GiteaPlugin extends Plugin {
 	 * @returns 替换变量后的字符串
 	 */
 	private interpolate(template: string): string {
-		const context = this.config.getContext() as {
-			branchName: string;
-			changelog: string;
-			latestVersion: string;
-			name: string;
-			repo: {
-				owner: string;
-				repository: string;
-			};
-			version: string;
-		};
+		const context = this.config.getContext();
 		return template
 			.replace(/\$\{version\}/g, context.version)
 			.replace(/\$\{latestVersion\}/g, context.latestVersion)
@@ -472,6 +462,31 @@ class GiteaPlugin extends Plugin {
 	}
 
 	/**
+	 * 处理单个附件配置
+	 * @param releaseId 发布 ID
+	 * @param config 附件配置
+	 */
+	private getReleaseNotes(): string {
+		const releaseNotes = this.giteaConfig.releaseNotes;
+		if (typeof releaseNotes === "string") {
+			return this.interpolate(releaseNotes);
+		} else if (typeof releaseNotes === "function") {
+			return releaseNotes(this.config.getContext());
+		}
+		return this.config.getContext("changelog") as string;
+	}
+
+	private getReleaseTitle(): string {
+		const releaseTitle = this.giteaConfig.releaseTitle;
+		if (typeof releaseTitle === "string") {
+			return this.interpolate(releaseTitle);
+		} else if (typeof releaseTitle === "function") {
+			return releaseTitle(this.config.getContext());
+		}
+		return this.config.getContext("version") as string;
+	}
+
+	/**
 	 * 执行发布操作，创建或更新 Gitea 发布.
 	 * @throws 当发布创建失败时抛出错误
 	 */
@@ -482,12 +497,8 @@ class GiteaPlugin extends Plugin {
 		}
 
 		const tagName = this.config.getContext("tagName") as string;
-		const releaseTitle = this.interpolate(
-			this.giteaConfig.releaseTitle ?? "v${version}",
-		);
-		const releaseNotes = this.interpolate(
-			this.giteaConfig.releaseNotes ?? "${changelog}",
-		);
+		const releaseTitle = this.getReleaseTitle();
+		const releaseNotes = this.getReleaseNotes();
 
 		this.log.info(`准备创建 Gitea 发布: ${releaseTitle}`);
 

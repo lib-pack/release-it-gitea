@@ -1,6 +1,7 @@
 declare module "release-it" {
 	interface Config {
-		getContext(path?: string): unknown;
+		getContext(): Context;
+		getContext(path: string): unknown;
 		setContext(path: string, value: unknown): void;
 	}
 
@@ -83,10 +84,10 @@ interface GiteaConfig {
 	release?: boolean;
 
 	/** 发布标题的模板字符串，支持变量替换 */
-	releaseTitle?: string;
+	releaseTitle?: ((context: Context) => string) | string;
 
 	/** 发布说明的模板字符串，支持变量替换 */
-	releaseNotes?: string;
+	releaseNotes?: ((context: Context) => string) | string;
 
 	/** 是否标记为预发布版本 */
 	prerelease?: boolean;
