@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.7.0](https://github.com/lib-pack/release-it-gitea/compare/1.6.0...1.7.0) (2025-07-14)
+
+### Features
+
+- 更新 README 文件，增强 releaseTitle 和 releaseNotes 的配置支持，允许使用 NPM 包和函数回调生成动态内容 ([f70fba9](https://github.com/lib-pack/release-it-gitea/commit/f70fba94ebf96a9fef3b723a4355d00a558f5308))
+
 # [1.6.0](https://github.com/lib-pack/release-it-gitea/compare/1.5.0...1.6.0) (2025-07-14)
 
 ### Features
