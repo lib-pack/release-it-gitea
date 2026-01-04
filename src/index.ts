@@ -29,7 +29,7 @@ interface GiteaReleaseResponse {
 
 class GiteaPlugin extends Plugin {
 	static isEnabled(config?: GiteaConfig): boolean {
-		return Boolean(config?.release !== false);
+		return config?.release !== false;
 	}
 
 	/**
@@ -141,7 +141,7 @@ class GiteaPlugin extends Plugin {
 		};
 
 		this.log.verbose(
-			`发送 ${requestOptions.method} 请求到: ${url} 参数:${requestOptions.body! ?? "none"}`,
+			`发送 ${requestOptions.method} 请求到: ${url} 参数:${requestOptions.body ?? "none"}`,
 		);
 
 		try {
@@ -431,7 +431,7 @@ class GiteaPlugin extends Plugin {
 
 		if (config.type === "zip") {
 			// 打包成 ZIP 文件
-			const zipName = config.name || `${basename(config.path)}.zip`;
+			const zipName = config.name ?? `${basename(config.path)}.zip`;
 			const tempZipPath = join(process.cwd(), ".temp", zipName);
 
 			// 确保临时目录存在
@@ -459,7 +459,7 @@ class GiteaPlugin extends Plugin {
 		} else {
 			// 上传单个文件
 			for (const file of files) {
-				const fileName = config.name || basename(file);
+				const fileName = config.name ?? basename(file);
 				await this.uploadAsset(releaseId, file, fileName, config.label);
 			}
 		}
@@ -469,19 +469,28 @@ class GiteaPlugin extends Plugin {
 	 * 获取发布说明内容
 	 * @returns 发布说明字符串
 	 */
-	private getReleaseNotes(): string {
+	private async getReleaseNotes(): Promise<string> {
 		const releaseNotes = this.giteaConfig.releaseNotes;
 		if (typeof releaseNotes === "string") {
 			if (releaseNotes.startsWith("npm:")) {
 				const npmPackage = releaseNotes.slice(4);
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					const npmHandler = require(npmPackage);
-					if (typeof npmHandler !== "function") {
+					const npmHandler = await import(npmPackage);
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					if (
+						typeof npmHandler !== "function" &&
+						typeof npmHandler.default !== "function"
+					) {
 						throw new Error(`${npmPackage} not found npm`);
 					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+					const handler =
+						typeof npmHandler.default === "function"
+							? npmHandler.default
+							: npmHandler;
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-					return npmHandler.releaseNotes(this.config.getContext());
+					return handler.releaseNotes(this.config.getContext());
 				} catch (error) {
 					console.error(error);
 					throw new Error(`${npmPackage} not found npm`);
@@ -495,19 +504,28 @@ class GiteaPlugin extends Plugin {
 		return this.config.getContext("changelog") as string;
 	}
 
-	private getReleaseTitle(): string {
+	private async getReleaseTitle(): Promise<string> {
 		const releaseTitle = this.giteaConfig.releaseTitle;
 		if (typeof releaseTitle === "string") {
 			if (releaseTitle.startsWith("npm:")) {
 				const npmPackage = releaseTitle.slice(4);
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-					const npmHandler = require(npmPackage);
-					if (typeof npmHandler !== "function") {
+					const npmHandler = await import(npmPackage);
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					if (
+						typeof npmHandler !== "function" &&
+						typeof npmHandler.default !== "function"
+					) {
 						throw new Error(`${npmPackage} not found npm`);
 					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+					const handler =
+						typeof npmHandler.default === "function"
+							? npmHandler.default
+							: npmHandler;
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-					return npmHandler.releaseTitle(this.config.getContext());
+					return handler.releaseTitle(this.config.getContext());
 				} catch (error) {
 					console.error(error);
 					throw new Error(`${npmPackage} not found npm`);
@@ -533,8 +551,8 @@ class GiteaPlugin extends Plugin {
 
 		const isDryRun = this.config.isDryRun;
 		const tagName = this.config.getContext("tagName") as string;
-		const releaseTitle = this.getReleaseTitle();
-		const releaseNotes = this.getReleaseNotes();
+		const releaseTitle = await this.getReleaseTitle();
+		const releaseNotes = await this.getReleaseNotes();
 
 		this.log.info(`准备创建 Gitea 发布: ${releaseTitle}`);
 
@@ -569,7 +587,7 @@ class GiteaPlugin extends Plugin {
 				release = await this.createRelease(releaseData);
 			}
 
-			this.log.info(`✅ Gitea 发布创建成功: ${String(release.html_url)}`);
+			this.log.info(`✅ Gitea 发布创建成功: ${release.html_url}`);
 
 			// 上传附件
 			if (this.giteaConfig.assets && this.giteaConfig.assets.length > 0) {
