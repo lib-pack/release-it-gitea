@@ -3,9 +3,8 @@ import FormData from "form-data";
 import { createReadStream, createWriteStream, statSync } from "fs";
 import { glob } from "glob";
 import fetch from "node-fetch";
-import { basename, dirname, extname, join } from "path";
+import { basename, dirname, join } from "path";
 import { Plugin } from "release-it";
-import { promisify } from "util";
 
 interface GiteaRelease {
 	body: string;
@@ -36,7 +35,6 @@ class GiteaPlugin extends Plugin {
 	/**
 	 * 获取并验证 Gitea 配置信息
 	 * @returns 验证后的 Gitea 配置对象
-	 * @throws 当配置缺失或无效时抛出错误
 	 */
 	private get giteaConfig(): GiteaConfig {
 		const gitea = this.getContext() as GiteaConfig;
@@ -143,7 +141,7 @@ class GiteaPlugin extends Plugin {
 		};
 
 		this.log.verbose(
-			`发送 ${requestOptions.method} 请求到: ${url} 参数:${requestOptions.body ?? "none"}`,
+			`发送 ${requestOptions.method} 请求到: ${url} 参数:${requestOptions.body! ?? "none"}`,
 		);
 
 		try {
@@ -152,7 +150,7 @@ class GiteaPlugin extends Plugin {
 			if (!response.ok) {
 				const errorText = await response.text();
 				throw new Error(
-					`Gitea API 请求失败 (${response.status.toString()}): ${errorText}`,
+					`Gitea API 请求失败 (${String(response.status)}): ${errorText}`,
 				);
 			}
 
@@ -270,7 +268,7 @@ class GiteaPlugin extends Plugin {
 			});
 			return files;
 		} catch (error) {
-			this.log.warn(`文件匹配失败: ${pattern}, 错误: ${error}`);
+			this.log.warn(`文件匹配失败: ${pattern}, 错误: ${String(error)}`);
 			return [];
 		}
 	}
@@ -295,7 +293,7 @@ class GiteaPlugin extends Plugin {
 
 			output.on("close", () => {
 				this.log.verbose(
-					`ZIP 文件创建完成: ${outputPath} (${archive.pointer()} bytes)`,
+					`ZIP 文件创建完成: ${outputPath} (${String(archive.pointer())} bytes)`,
 				);
 				resolve();
 			});
@@ -317,7 +315,7 @@ class GiteaPlugin extends Plugin {
 				}
 			}
 
-			archive.finalize();
+			void archive.finalize();
 		});
 	}
 
@@ -335,8 +333,12 @@ class GiteaPlugin extends Plugin {
 		fileName: string,
 		label?: string,
 	): Promise<unknown> {
+		if (this.config.isDryRun) {
+			this.log.info(`[模拟执行] 上传附件: ${fileName}`);
+			return { id: 0 };
+		}
 		const url = this.buildApiUrl(
-			`/repos/${this.giteaConfig.owner}/${this.giteaConfig.repository}/releases/${releaseId}/assets`,
+			`/repos/${this.giteaConfig.owner}/${this.giteaConfig.repository}/releases/${String(releaseId)}/assets`,
 		);
 		const token = this.getToken();
 
@@ -360,14 +362,16 @@ class GiteaPlugin extends Plugin {
 			timeout: this.giteaConfig.timeout,
 		};
 
-		this.log.verbose(`上传附件: ${fileName} 到发布 ${releaseId}`);
+		this.log.info(`上传附件: ${fileName} 到发布 ${String(releaseId)}`);
 
 		try {
 			const response = await fetch(url, requestOptions);
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				throw new Error(`附件上传失败 (${response.status}): ${errorText}`);
+				throw new Error(
+					`附件上传失败 (${String(response.status)}): ${errorText}`,
+				);
 			}
 
 			const result = await response.json();
@@ -392,7 +396,7 @@ class GiteaPlugin extends Plugin {
 			return;
 		}
 
-		this.log.info(`开始上传 ${assets.length} 个附件...`);
+		this.log.info(`开始上传 ${String(assets.length)} 个附件...`);
 
 		for (const asset of assets) {
 			try {
@@ -400,7 +404,7 @@ class GiteaPlugin extends Plugin {
 				await this.processAsset(releaseId, config);
 			} catch (error) {
 				this.log.error(
-					`附件处理失败: ${JSON.stringify(asset)}, 错误: ${error}`,
+					`附件处理失败: ${JSON.stringify(asset)}, 错误: ${String(error)}`,
 				);
 				// 继续处理其他附件，不中断整个流程
 			}
@@ -434,7 +438,7 @@ class GiteaPlugin extends Plugin {
 			const { mkdirSync } = await import("fs");
 			try {
 				mkdirSync(dirname(tempZipPath), { recursive: true });
-			} catch (error) {
+			} catch {
 				// 目录可能已存在，忽略错误
 			}
 
@@ -449,7 +453,7 @@ class GiteaPlugin extends Plugin {
 			const { unlinkSync } = await import("fs");
 			try {
 				unlinkSync(tempZipPath);
-			} catch (error) {
+			} catch {
 				this.log.warn(`清理临时文件失败: ${tempZipPath}`);
 			}
 		} else {
@@ -462,9 +466,8 @@ class GiteaPlugin extends Plugin {
 	}
 
 	/**
-	 * 处理单个附件配置
-	 * @param releaseId 发布 ID
-	 * @param config 附件配置
+	 * 获取发布说明内容
+	 * @returns 发布说明字符串
 	 */
 	private getReleaseNotes(): string {
 		const releaseNotes = this.giteaConfig.releaseNotes;
@@ -472,11 +475,12 @@ class GiteaPlugin extends Plugin {
 			if (releaseNotes.startsWith("npm:")) {
 				const npmPackage = releaseNotes.slice(4);
 				try {
-					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const npmHandler = require(npmPackage);
 					if (typeof npmHandler !== "function") {
 						throw new Error(`${npmPackage} not found npm`);
 					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 					return npmHandler.releaseNotes(this.config.getContext());
 				} catch (error) {
 					console.error(error);
@@ -497,11 +501,12 @@ class GiteaPlugin extends Plugin {
 			if (releaseTitle.startsWith("npm:")) {
 				const npmPackage = releaseTitle.slice(4);
 				try {
-					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const npmHandler = require(npmPackage);
 					if (typeof npmHandler !== "function") {
 						throw new Error(`${npmPackage} not found npm`);
 					}
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 					return npmHandler.releaseTitle(this.config.getContext());
 				} catch (error) {
 					console.error(error);
@@ -526,6 +531,7 @@ class GiteaPlugin extends Plugin {
 			return;
 		}
 
+		const isDryRun = this.config.isDryRun;
 		const tagName = this.config.getContext("tagName") as string;
 		const releaseTitle = this.getReleaseTitle();
 		const releaseNotes = this.getReleaseNotes();
@@ -540,6 +546,16 @@ class GiteaPlugin extends Plugin {
 			tag_name: tagName,
 		};
 
+		if (isDryRun) {
+			this.log.info(`[模拟执行] 正在创建/更新发布 ${tagName}`);
+			this.log.verbose(`发布数据: ${JSON.stringify(releaseData)}`);
+
+			if (this.giteaConfig.assets && this.giteaConfig.assets.length > 0) {
+				await this.uploadAssets(0);
+			}
+			return;
+		}
+
 		try {
 			// 检查发布是否已存在
 			const exists = await this.releaseExists(tagName);
@@ -553,7 +569,7 @@ class GiteaPlugin extends Plugin {
 				release = await this.createRelease(releaseData);
 			}
 
-			this.log.info(`✅ Gitea 发布创建成功: ${release.html_url}`);
+			this.log.info(`✅ Gitea 发布创建成功: ${String(release.html_url)}`);
 
 			// 上传附件
 			if (this.giteaConfig.assets && this.giteaConfig.assets.length > 0) {

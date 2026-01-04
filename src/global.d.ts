@@ -1,5 +1,6 @@
 declare module "release-it" {
 	interface Config {
+		isDryRun: boolean;
 		getContext(): Context;
 		getContext(path: string): unknown;
 		setContext(path: string, value: unknown): void;
