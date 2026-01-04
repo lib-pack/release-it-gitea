@@ -41,37 +41,80 @@ interface GiteaPluginWithPrivates {
 	resolveFiles: (pattern: string) => Promise<string[]>;
 }
 
-// Mock node-fetch
-vi.mock("node-fetch", () => ({
-	default: vi.fn(),
+const {
+	mockFormDataAppend,
+	mockFormDataGetHeaders,
+	mockNodeFetch,
+	mockFs,
+	mockGlobFn,
+	mockArchiverFn,
+} = vi.hoisted(() => ({
+	mockArchiverFn: vi.fn().mockReturnValue({
+		file: vi.fn(),
+		finalize: vi.fn().mockResolvedValue(undefined),
+		on: vi.fn(),
+		pipe: vi.fn(),
+		pointer: vi.fn().mockReturnValue(1024),
+	}),
+	mockFormDataAppend: vi.fn(),
+	mockFormDataGetHeaders: vi.fn().mockReturnValue({}),
+	mockFs: {
+		createReadStream: vi.fn().mockReturnValue({}),
+		createWriteStream: vi.fn().mockImplementation(function () {
+			return {
+				on: vi.fn().mockImplementation(function (
+					event: string,
+					cb: (...args: any[]) => void,
+				) {
+					if (event === "close") {
+						setTimeout(cb, 0);
+					}
+				}),
+			};
+		}),
+		mkdirSync: vi.fn().mockReturnValue(undefined),
+		statSync: vi.fn().mockReturnValue({ isFile: () => true }),
+		unlinkSync: vi.fn().mockReturnValue(undefined),
+	},
+	mockGlobFn: vi.fn().mockResolvedValue([]),
+	mockNodeFetch: vi.fn().mockResolvedValue({
+		json: () => Promise.resolve({}),
+		ok: true,
+	}),
 }));
 
-const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
+// Mock node-fetch
+vi.mock("node-fetch", () => ({
+	default: mockNodeFetch,
+}));
 
 // Mock fs functions
 vi.mock("fs", () => ({
-	statSync: vi.fn(),
-	createReadStream: vi.fn(),
-	createWriteStream: vi.fn(),
-	mkdirSync: vi.fn(),
-	unlinkSync: vi.fn(),
+	...mockFs,
 }));
 
 // Mock glob
 vi.mock("glob", () => ({
-	glob: vi.fn(),
+	glob: mockGlobFn,
 }));
 
 // Mock archiver
 vi.mock("archiver", () => ({
-	default: vi.fn(),
+	default: mockArchiverFn,
 }));
 
 // Mock form-data
 vi.mock("form-data", () => ({
-	default: vi.fn(),
+	default: vi.fn().mockImplementation(function () {
+		return {
+			append: mockFormDataAppend,
+			getHeaders: mockFormDataGetHeaders,
+		};
+	}),
 }));
 
+const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
+const mockFormData = FormData as unknown as ReturnType<typeof vi.fn>;
 const mockGlob = glob as unknown as ReturnType<typeof vi.fn>;
 const mockStatSync = statSync as unknown as ReturnType<typeof vi.fn>;
 const mockCreateReadStream = createReadStream as unknown as ReturnType<
@@ -83,7 +126,6 @@ const mockCreateWriteStream = createWriteStream as unknown as ReturnType<
 const mockMkdirSync = mkdirSync as unknown as ReturnType<typeof vi.fn>;
 const mockUnlinkSync = unlinkSync as unknown as ReturnType<typeof vi.fn>;
 const mockArchiver = archiver as unknown as ReturnType<typeof vi.fn>;
-const mockFormData = FormData as unknown as ReturnType<typeof vi.fn>;
 
 // Mock release-it Plugin base class
 vi.mock("release-it", () => ({
@@ -158,7 +200,7 @@ describe("GiteaPlugin", () => {
 
 		mockConfig = {
 			isDryRun: false,
-			getContext: vi.fn((key?: string) => {
+			getContext: vi.fn().mockImplementation(function (key?: string) {
 				if (key) {
 					return mockContext[key];
 				}
@@ -235,7 +277,7 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should throw error when gitea config is missing", () => {
-			mockConfig.getContext = vi.fn().mockReturnValue(null);
+			mockConfig.getContext = vi.fn().mockReturnValue(null as any);
 
 			expect(
 				() => (plugin as unknown as GiteaPluginWithPrivates).giteaConfig,
@@ -243,7 +285,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should throw error when host is missing", () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key === "repo") {
 					return mockContext.repo;
 				}
@@ -259,7 +303,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should throw error when owner is missing", () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key === "repo") {
 					return { repository: "testrepo" };
 				}
@@ -275,7 +321,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should throw error when repository is missing", () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key === "repo") {
 					return { owner: "testowner" };
 				}
@@ -307,7 +355,9 @@ describe("GiteaPlugin", () => {
 
 		it("should use custom token reference", () => {
 			process.env.CUSTOM_TOKEN = "custom-test-token";
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key) {
 					return mockContext[key];
 				}
@@ -336,7 +386,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should handle trailing slash in host", () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key) {
 					return mockContext[key];
 				}
@@ -358,7 +410,9 @@ describe("GiteaPlugin", () => {
 	describe("interpolate", () => {
 		beforeEach(() => {
 			// Mock config.getContext() to return the full context for interpolate method
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key) {
 					return mockContext[key];
 				}
@@ -529,7 +583,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should skip release when disabled", async () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key) {
 					return mockContext[key];
 				}
@@ -550,11 +606,11 @@ describe("GiteaPlugin", () => {
 		it("should create new release when it does not exist", async () => {
 			// Create a new plugin instance with proper mock for this test
 			const testMockConfig = {
-				getContext: vi.fn((key?: string) => {
+				isDryRun: false,
+				getContext: vi.fn().mockImplementation(function (key?: string) {
 					if (key) {
 						return mockContext[key];
 					}
-					// Return full context for interpolate method
 					return mockContext;
 				}),
 				setContext: vi.fn(),
@@ -623,7 +679,7 @@ describe("GiteaPlugin", () => {
 		it("should support dry-run mode", async () => {
 			const testMockConfig = {
 				isDryRun: true,
-				getContext: vi.fn((key?: string) => {
+				getContext: vi.fn().mockImplementation(function (key?: string) {
 					if (key) {
 						return mockContext[key];
 					}
@@ -664,7 +720,8 @@ describe("GiteaPlugin", () => {
 		it("should handle release creation errors", async () => {
 			// Create a new plugin instance with proper mock for this test
 			const testMockConfig = {
-				getContext: vi.fn((key?: string) => {
+				isDryRun: false,
+				getContext: vi.fn().mockImplementation(function (key?: string) {
 					if (key) {
 						return mockContext[key];
 					}
@@ -718,7 +775,9 @@ describe("GiteaPlugin", () => {
 
 	describe("afterRelease", () => {
 		it("should log release URL when available", async () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key === "releaseUrl") {
 					return "https://gitea.example.com/testowner/testrepo/releases/tag/v1.0.0";
 				}
@@ -733,7 +792,9 @@ describe("GiteaPlugin", () => {
 		});
 
 		it("should not log when release URL is not available", async () => {
-			mockConfig.getContext = vi.fn((key?: string) => {
+			mockConfig.getContext = vi.fn().mockImplementation(function (
+				key?: string,
+			) {
 				if (key === "releaseUrl") {
 					return undefined;
 				}
@@ -817,11 +878,12 @@ describe("GiteaPlugin", () => {
 			mockStatSync.mockReturnValue({ isFile: () => true });
 
 			// Mock form data
-			const mockForm = {
-				append: vi.fn(),
-				getHeaders: vi.fn().mockReturnValue({}),
-			};
-			mockFormData.mockReturnValue(mockForm);
+			mockFormData.mockImplementation(function () {
+				return {
+					append: vi.fn(),
+					getHeaders: vi.fn().mockReturnValue({}),
+				};
+			});
 			mockCreateReadStream.mockReturnValue({});
 
 			// Mock successful upload
@@ -868,15 +930,18 @@ describe("GiteaPlugin", () => {
 			]);
 			mockStatSync.mockReturnValue({ isFile: () => true });
 
-			// Mock archiver
 			const mockArchive = {
 				file: vi.fn(),
 				pipe: vi.fn(),
 				finalize: vi.fn(),
 				pointer: vi.fn().mockReturnValue(1024),
-				on: vi.fn((event, callback) => {
-					if (event === "error") {
-						// Store error callback for later use
+				on: vi.fn().mockImplementation(function (
+					event: string,
+					callback: (...args: any[]) => void,
+				) {
+					if (event === "close") {
+						// Simulate successful zip creation
+						setTimeout(callback, 0);
 					}
 				}),
 			};
@@ -884,7 +949,10 @@ describe("GiteaPlugin", () => {
 
 			// Mock write stream
 			const mockWriteStream = {
-				on: vi.fn((event, callback) => {
+				on: vi.fn().mockImplementation(function (
+					event: string,
+					callback: (...args: any[]) => void,
+				) {
 					if (event === "close") {
 						// Simulate successful zip creation
 						setTimeout(callback, 0);
@@ -894,11 +962,12 @@ describe("GiteaPlugin", () => {
 			mockCreateWriteStream.mockReturnValue(mockWriteStream);
 
 			// Mock form data
-			const mockForm = {
-				append: vi.fn(),
-				getHeaders: vi.fn().mockReturnValue({}),
-			};
-			mockFormData.mockReturnValue(mockForm);
+			mockFormData.mockImplementation(function () {
+				return {
+					append: vi.fn(),
+					getHeaders: vi.fn().mockReturnValue({}),
+				};
+			});
 
 			// Mock successful upload
 			mockFetch.mockResolvedValue({
@@ -962,11 +1031,12 @@ describe("GiteaPlugin", () => {
 			mockStatSync.mockReturnValue({ isFile: () => true });
 
 			// Mock form data
-			const mockForm = {
-				append: vi.fn(),
-				getHeaders: vi.fn().mockReturnValue({}),
-			};
-			mockFormData.mockReturnValue(mockForm);
+			mockFormData.mockImplementation(function () {
+				return {
+					append: vi.fn(),
+					getHeaders: vi.fn().mockReturnValue({}),
+				};
+			});
 			mockCreateReadStream.mockReturnValue({});
 
 			// Mock successful upload for second asset
@@ -1016,11 +1086,12 @@ describe("GiteaPlugin", () => {
 			mockStatSync.mockReturnValue({ isFile: () => true });
 
 			// Mock form data
-			const mockForm = {
-				append: vi.fn(),
-				getHeaders: vi.fn().mockReturnValue({}),
-			};
-			mockFormData.mockReturnValue(mockForm);
+			mockFormData.mockImplementation(function () {
+				return {
+					append: vi.fn(),
+					getHeaders: vi.fn().mockReturnValue({}),
+				};
+			});
 			mockCreateReadStream.mockReturnValue({});
 
 			// Mock failed upload
