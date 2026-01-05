@@ -1,5 +1,15 @@
 # Changelog
 
+# [1.8.0](https://github.com/lib-pack/release-it-gitea/compare/1.7.0...1.8.0) (2026-01-05)
+
+### Bug Fixes
+
+- 去除eslint-plugin-markdown依赖 ([a08a02e](https://github.com/lib-pack/release-it-gitea/commit/a08a02e71da5803c672f98af1cadfed815c5ee83))
+
+### Features
+
+- 添加 dry-run 模式支持，在模拟执行时跳过实际的 API 请求和文件上传操作 ([1a93d90](https://github.com/lib-pack/release-it-gitea/commit/1a93d9004145fb62e020db958052920e88da3c0e))
+
 # [1.7.0](https://github.com/lib-pack/release-it-gitea/compare/1.6.0...1.7.0) (2025-07-14)
 
 ### Features
