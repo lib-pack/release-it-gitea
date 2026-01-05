@@ -48,8 +48,8 @@ importers:
         specifier: 4.0.16
         version: 4.0.16(vitest@4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2))
       '@vitest/eslint-plugin':
-        specifier: 1.1.38
-        version: 1.1.38(@typescript-eslint/utils@8.51.0(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2))
+        specifier: 1.6.4
+        version: 1.6.4(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2))
       console-fail-test:
         specifier: 0.6.1
         version: 0.6.1
@@ -1380,12 +1380,12 @@ packages:
       '@vitest/browser':
         optional: true
 
-  '@vitest/eslint-plugin@1.1.38':
-    resolution: {integrity: sha512-KcOTZyVz8RiM5HyriiDVrP1CyBGuhRxle+lBsmSs6NTJEO/8dKVAq+f5vQzHj1/Kc7bYXSDO6yBe62Zx0t5iaw==}
+  '@vitest/eslint-plugin@1.6.4':
+    resolution: {integrity: sha512-+qw32ux8HMVNrJnQOYgdjrMYmCn9vsiKnJUv5MoOg40e18WOvhWurzHdbRB3vXLfUrP7+jYyQbd6TuRhL23AkQ==}
+    engines: {node: '>=18'}
     peerDependencies:
-      '@typescript-eslint/utils': ^8.24.0
-      eslint: '>= 8.57.0'
-      typescript: '>= 5.0.0'
+      eslint: '>=8.57.0'
+      typescript: '>=5.0.0'
       vitest: '*'
     peerDependenciesMeta:
       typescript:
@@ -4848,13 +4848,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/eslint-plugin@1.1.38(@typescript-eslint/utils@8.51.0(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2))':
+  '@vitest/eslint-plugin@1.6.4(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2))':
     dependencies:
+      '@typescript-eslint/scope-manager': 8.51.0
       '@typescript-eslint/utils': 8.51.0(eslint@9.22.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.22.0(jiti@2.6.1)
     optionalDependencies:
       typescript: 5.9.3
       vitest: 4.0.16(@types/node@22.13.10)(jiti@2.6.1)(yaml@2.8.2)
+    transitivePeerDependencies:
+      - supports-color
 
   '@vitest/expect@4.0.16':
     dependencies:
