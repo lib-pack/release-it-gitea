@@ -63,8 +63,8 @@ importers:
         specifier: 2.21.0
         version: 2.21.0(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-n:
-        specifier: 17.16.2
-        version: 17.16.2(eslint@9.39.2(jiti@2.6.1))
+        specifier: 17.23.1
+        version: 17.23.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       eslint-plugin-package-json:
         specifier: 0.88.0
         version: 0.88.0(@types/estree@1.0.8)(eslint@9.39.2(jiti@2.6.1))(jsonc-eslint-parser@2.4.0)
@@ -5212,7 +5212,7 @@ snapshots:
     transitivePeerDependencies:
       - '@eslint/json'
 
-  eslint-plugin-n@17.16.2(eslint@9.39.2(jiti@2.6.1)):
+  eslint-plugin-n@17.23.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@9.39.2(jiti@2.6.1))
       enhanced-resolve: 5.18.1
