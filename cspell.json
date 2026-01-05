@@ -8,5 +8,15 @@
 		"lib",
 		"node_modules",
 		"pnpm-lock.yaml"
+	],
+	"words": [
+		"Gitea",
+		"infile",
+		"lyda",
+		"myorg",
+		"myproject",
+		"nodir",
+		"testowner",
+		"testrepo"
 	]
 }
