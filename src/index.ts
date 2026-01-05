@@ -477,17 +477,20 @@ class GiteaPlugin extends Plugin {
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const npmHandler = await import(npmPackage);
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
 					if (
 						typeof npmHandler !== "function" &&
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 						typeof npmHandler.default !== "function"
 					) {
 						throw new Error(`${npmPackage} not found npm`);
 					}
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const handler =
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 						typeof npmHandler.default === "function"
-							? npmHandler.default
+							? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+								npmHandler.default
 							: npmHandler;
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 					return handler.releaseNotes(this.config.getContext());
@@ -512,17 +515,20 @@ class GiteaPlugin extends Plugin {
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const npmHandler = await import(npmPackage);
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					// npmHandler 可能是 CommonJS 模块或 ES 模块，因此需要检查 default 属性
 					if (
 						typeof npmHandler !== "function" &&
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 						typeof npmHandler.default !== "function"
 					) {
 						throw new Error(`${npmPackage} not found npm`);
 					}
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const handler =
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 						typeof npmHandler.default === "function"
-							? npmHandler.default
+							? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+								npmHandler.default
 							: npmHandler;
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 					return handler.releaseTitle(this.config.getContext());

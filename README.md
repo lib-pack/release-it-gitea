@@ -389,7 +389,7 @@ npm install ${context.name}@${context.version}
 | `repo.remote`     | string | 远程仓库名称                  | `"origin"`                       |
 | `repo.repository` | string | 仓库名称                      | `"my-repo"`                      |
 
-**示例：使用 context 属性生成自定义发布标题**
+### 示例：使用 context 属性生成自定义发布标题
 
 ```js
 releaseTitle: (context) => {

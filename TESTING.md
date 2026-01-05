@@ -179,7 +179,7 @@ npm run lint
 
 1. **API Token 错误**：
 
-   ```
+   ```text
    Error: Gitea API token 未找到
    ```
 
@@ -187,14 +187,14 @@ npm run lint
 
 2. **网络连接错误**：
 
-   ```
+   ```text
    Error: 无法连接到 Gitea 仓库
    ```
 
    **解决方案**：检查 `host` 配置和网络连接
 
 3. **权限错误**：
-   ```
+   ```text
    Error: Gitea API 请求失败 (403)
    ```
    **解决方案**：确保 API token 有足够的权限

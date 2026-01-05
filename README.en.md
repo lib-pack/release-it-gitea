@@ -389,7 +389,7 @@ In function callbacks, you can access the following context object properties:
 | `repo.remote`     | string | Remote repository name          | `"origin"`                       |
 | `repo.repository` | string | Repository name                 | `"my-repo"`                      |
 
-**Example: Using context properties to generate custom release titles**
+### Example: Using context properties to generate custom release titles
 
 ```js
 releaseTitle: (context) => {
