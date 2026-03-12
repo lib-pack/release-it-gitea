@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.1](https://github.com/lib-pack/release-it-gitea/compare/1.9.0...1.9.1) (2026-03-12)
+
+### Bug Fixes
+
+- 为全局类型定义添加详细的 JSDoc 注释 ([b23062c](https://github.com/lib-pack/release-it-gitea/commit/b23062c3a0efb979e59f2754f9f18a55ec5c200e))
+
 # [1.9.0](https://github.com/lib-pack/release-it-gitea/compare/1.8.0...1.9.0) (2026-03-12)
 
 ### Features
