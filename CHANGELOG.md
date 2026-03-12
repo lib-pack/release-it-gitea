@@ -1,5 +1,11 @@
 # Changelog
 
+# [1.9.0](https://github.com/lib-pack/release-it-gitea/compare/1.8.0...1.9.0) (2026-03-12)
+
+### Features
+
+- 添加动态配置读取功能以支持插件间配置共享 ([94ec0dd](https://github.com/lib-pack/release-it-gitea/commit/94ec0ddabbb9366063814f39dd7f6c43affcac44))
+
 # [1.8.0](https://github.com/lib-pack/release-it-gitea/compare/1.7.0...1.8.0) (2026-01-05)
 
 ### Bug Fixes
