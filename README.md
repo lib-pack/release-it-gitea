@@ -102,6 +102,128 @@ npx release-it
 }
 ```
 
+## 插件间配置共享
+
+`mergeOptionsKeys` 允许其他 release-it 插件动态设置本插件的配置项，实现插件间的配置共享和协作。
+
+### 使用场景
+
+当你有多个插件需要协同工作时，例如：
+
+- 一个插件负责构建小程序，并需要将构建产物添加到 Gitea 发布的附件中
+- 一个插件生成文档，并需要动态修改发布说明
+
+### 配置方式
+
+在 `.release-it.json` 中配置：
+
+```json
+{
+	"plugins": {
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"owner": "your-username",
+			"repository": "your-repo",
+			"assets": ["README.md"],
+			"mergeOptionsKeys": ["assets", "releaseNotes"]
+		}
+	}
+}
+```
+
+### 其他插件中设置配置
+
+在其他 release-it 插件中，可以通过 `setContext` 方法动态设置配置：
+
+```javascript
+// 在其他插件的某个生命周期方法中
+class MyPlugin extends Plugin {
+	async beforeRelease() {
+		// 动态添加附件
+		this.config.setContext({
+			"release-it-gitea": {
+				assets: ["dist/miniprogram.zip", "dist/source-map.zip"],
+			},
+		});
+	}
+}
+```
+
+### 合并规则
+
+- **数组类型**（如 `assets`）：上下文中的值会与配置文件中的值**合并**
+
+  ```javascript
+  // 配置文件: ["README.md"]
+  // 上下文设置: ["dist/app.zip"]
+  // 最终结果: ["dist/app.zip", "README.md"]
+  ```
+
+- **非数组类型**（如 `releaseNotes`）：上下文中的值会**覆盖**配置文件中的值
+  ```javascript
+  // 配置文件: "默认发布说明"
+  // 上下文设置: "自定义发布说明"
+  // 最终结果: "自定义发布说明"
+  ```
+
+### 完整示例
+
+假设你有一个小程序构建插件：
+
+```javascript
+// release-it-miniprogram-plugin.js
+import { Plugin } from "release-it";
+
+class MiniprogramPlugin extends Plugin {
+	async beforeRelease() {
+		// 构建小程序
+		await this.buildMiniprogram();
+
+		// 将构建产物添加到 Gitea 发布
+		this.config.setContext({
+			"release-it-gitea": {
+				assets: [
+					"dist/miniprogram.zip",
+					{
+						path: "dist/source-map/**/*",
+						name: "source-maps.zip",
+						type: "zip",
+					},
+				],
+			},
+		});
+	}
+
+	async buildMiniprogram() {
+		// 构建逻辑...
+	}
+}
+
+export default MiniprogramPlugin;
+```
+
+配置文件：
+
+```json
+{
+	"plugins": {
+		"release-it-miniprogram-plugin": {},
+		"release-it-gitea": {
+			"host": "https://gitea.example.com",
+			"assets": ["README.md", "CHANGELOG.md"],
+			"mergeOptionsKeys": ["assets"]
+		}
+	}
+}
+```
+
+最终发布时会上传：
+
+- `dist/miniprogram.zip`（来自小程序插件）
+- `source-maps.zip`（来自小程序插件）
+- `README.md`（来自配置文件）
+- `CHANGELOG.md`（来自配置文件）
+
 ## 附件上传功能
 
 ### 基本用法

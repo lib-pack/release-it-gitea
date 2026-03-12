@@ -110,6 +110,29 @@ interface GiteaConfig {
 	/** 要上传的附件列表 */
 	assets?: (GiteaAssetConfig | string)[];
 
-	/** 是否从 config.options.plugins["release-it-gitea"] 动态读取 配置 */
-	readOptionsKeys?: (keyof GiteaConfig)[];
+	/**
+	 * 指定需要从上下文中动态合并的配置项键名列表
+	 *
+	 * 允许其他插件通过 `this.config.setContext({ "release-it-gitea": { ... } })`
+	 * 动态设置配置值，本插件会自动合并这些配置。
+	 *
+	 * - 对于数组类型（如 assets），会将上下文中的值与配置文件中的值合并
+	 * - 对于非数组类型，上下文中的值会覆盖配置文件中的值
+	 * @example
+	 * ```json
+	 * {
+	 *   "mergeOptionsKeys": ["assets", "releaseNotes"]
+	 * }
+	 * ```
+	 *
+	 * 其他插件可以这样设置：
+	 * ```typescript
+	 * this.config.setContext({
+	 *   "release-it-gitea": {
+	 *     assets: ["path/to/file.zip"]
+	 *   }
+	 * });
+	 * ```
+	 */
+	mergeOptionsKeys?: (keyof GiteaConfig)[];
 }

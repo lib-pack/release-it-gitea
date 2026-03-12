@@ -65,13 +65,13 @@ class GiteaPlugin extends Plugin {
 			tokenRef: gitea.tokenRef ?? "GITEA_TOKEN",
 		};
 
-		if (gitea.readOptionsKeys?.length) {
+		if (gitea.mergeOptionsKeys?.length) {
 			const dynReleaseItGiteaConfig = this.config.getContext(
 				"release-it-gitea",
 			) as Partial<GiteaConfig> | undefined;
 			// 从 config.options 动态读取 assets，以支持其他插件动态添加附件
 			if (dynReleaseItGiteaConfig) {
-				for (const option of gitea.readOptionsKeys) {
+				for (const option of gitea.mergeOptionsKeys) {
 					if (option in dynReleaseItGiteaConfig) {
 						const dynValue = dynReleaseItGiteaConfig[option];
 						const currentValue = config[option];
