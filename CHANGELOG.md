@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.2](https://github.com/lib-pack/release-it-gitea/compare/1.9.1...1.9.2) (2026-03-12)
+
+### Bug Fixes
+
+- 为动态配置合并逻辑添加详细的调试日志 ([1e7a728](https://github.com/lib-pack/release-it-gitea/commit/1e7a728c69cc252c1d54f6b38e5c461da43e6834))
+
 ## [1.9.1](https://github.com/lib-pack/release-it-gitea/compare/1.9.0...1.9.1) (2026-03-12)
 
 ### Bug Fixes
