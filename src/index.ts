@@ -51,7 +51,7 @@ class GiteaPlugin extends Plugin {
 		};
 
 		// 设置默认值
-		const config: GiteaConfig = {
+		let config: GiteaConfig = {
 			assets: gitea.assets ?? [],
 			draft: gitea.draft ?? false,
 			host: gitea.host ?? repo.host,
@@ -68,19 +68,23 @@ class GiteaPlugin extends Plugin {
 		if (gitea.readOptionsKeys?.length) {
 			const dynReleaseItGiteaConfig = this.config.getContext(
 				"release-it-gitea",
-			) as GiteaConfig;
+			) as Partial<GiteaConfig> | undefined;
 			// 从 config.options 动态读取 assets，以支持其他插件动态添加附件
 			if (dynReleaseItGiteaConfig) {
 				for (const option of gitea.readOptionsKeys) {
 					if (option in dynReleaseItGiteaConfig) {
-						if (Array.isArray(dynReleaseItGiteaConfig[option])) {
-							(config as any)[option] = dynReleaseItGiteaConfig[option].concat(
-								(config[option] as any) ?? [],
-							);
-						} else {
-							(config as any)[option] = (dynReleaseItGiteaConfig as any)[
-								option
-							];
+						const dynValue = dynReleaseItGiteaConfig[option];
+						const currentValue = config[option];
+
+						if (Array.isArray(dynValue)) {
+							// 对于数组类型，合并两个数组
+							const mergedArray = Array.isArray(currentValue)
+								? [...dynValue, ...currentValue]
+								: dynValue;
+							config = { ...config, [option]: mergedArray };
+						} else if (dynValue !== undefined) {
+							// 对于非数组类型，直接覆盖
+							config = { ...config, [option]: dynValue };
 						}
 					}
 				}
