@@ -3,6 +3,11 @@ declare module "release-it" {
 		getContext(): Context;
 		getContext(path: string): unknown;
 		isDryRun: boolean;
+		options: {
+			plugins: {
+				"release-it-gitea"?: GiteaConfig;
+			};
+		};
 		setContext(path: string, value: unknown): void;
 	}
 
@@ -104,4 +109,7 @@ interface GiteaConfig {
 
 	/** 要上传的附件列表 */
 	assets?: (GiteaAssetConfig | string)[];
+
+	/** 是否从 config.options.plugins["release-it-gitea"] 动态读取 配置 */
+	readOptionsKeys?: (keyof GiteaConfig)[];
 }

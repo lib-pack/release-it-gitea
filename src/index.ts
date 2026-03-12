@@ -65,6 +65,28 @@ class GiteaPlugin extends Plugin {
 			tokenRef: gitea.tokenRef ?? "GITEA_TOKEN",
 		};
 
+		if (gitea.readOptionsKeys?.length) {
+			const dynReleaseItGiteaConfig = this.config.getContext(
+				"release-it-gitea",
+			) as GiteaConfig;
+			// 从 config.options 动态读取 assets，以支持其他插件动态添加附件
+			if (dynReleaseItGiteaConfig) {
+				for (const option of gitea.readOptionsKeys) {
+					if (option in dynReleaseItGiteaConfig) {
+						if (Array.isArray(dynReleaseItGiteaConfig[option])) {
+							(config as any)[option] = dynReleaseItGiteaConfig[option].concat(
+								(config[option] as any) ?? [],
+							);
+						} else {
+							(config as any)[option] = (dynReleaseItGiteaConfig as any)[
+								option
+							];
+						}
+					}
+				}
+			}
+		}
+
 		// 验证必需的配置
 		if (!config.host) {
 			throw new Error("Gitea host 配置是必需的");
