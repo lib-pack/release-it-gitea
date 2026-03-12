@@ -66,15 +66,26 @@ class GiteaPlugin extends Plugin {
 		};
 
 		if (gitea.mergeOptionsKeys?.length) {
-			const dynReleaseItGiteaConfig = this.config.getContext(
-				"release-it-gitea",
-			) as Partial<GiteaConfig> | undefined;
+			this.log.verbose(
+				`开始合并动态配置，mergeOptionsKeys: ${JSON.stringify(gitea.mergeOptionsKeys)}`,
+			);
+			const dynReleaseItGiteaConfig = (
+				this.config.getContext() as unknown as {
+					"release-it-gitea": Partial<GiteaConfig>;
+				}
+			)?.["release-it-gitea"];
+			this.log.verbose(
+				`从上下文获取到的动态配置: ${JSON.stringify(dynReleaseItGiteaConfig)}`,
+			);
 			// 从 config.options 动态读取 assets，以支持其他插件动态添加附件
 			if (dynReleaseItGiteaConfig) {
 				for (const option of gitea.mergeOptionsKeys) {
 					if (option in dynReleaseItGiteaConfig) {
 						const dynValue = dynReleaseItGiteaConfig[option];
 						const currentValue = config[option];
+						this.log.verbose(
+							`合并配置项 "${option}": 动态值=${JSON.stringify(dynValue)}, 当前值=${JSON.stringify(currentValue)}`,
+						);
 
 						if (Array.isArray(dynValue)) {
 							// 对于数组类型，合并两个数组
@@ -82,12 +93,22 @@ class GiteaPlugin extends Plugin {
 								? [...dynValue, ...currentValue]
 								: dynValue;
 							config = { ...config, [option]: mergedArray };
+							this.log.verbose(
+								`数组类型合并完成，最终值: ${JSON.stringify(mergedArray)}`,
+							);
 						} else if (dynValue !== undefined) {
 							// 对于非数组类型，直接覆盖
 							config = { ...config, [option]: dynValue };
+							this.log.verbose(
+								`非数组类型覆盖完成，最终值: ${JSON.stringify(dynValue)}`,
+							);
 						}
+					} else {
+						this.log.verbose(`配置项 "${option}" 在动态配置中不存在，跳过`);
 					}
 				}
+			} else {
+				this.log.verbose("未从上下文中获取到动态配置");
 			}
 		}
 
