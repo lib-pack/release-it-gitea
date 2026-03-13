@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.3](https://github.com/lib-pack/release-it-gitea/compare/1.9.2...1.9.3) (2026-03-13)
+
+### Bug Fixes
+
+- **deps:** update dependency @release-it/conventional-changelog to v10.0.6 ([56defa4](https://github.com/lib-pack/release-it-gitea/commit/56defa4cb29b107969fb6c932c5f0db11868de11))
+
 ## [1.9.2](https://github.com/lib-pack/release-it-gitea/compare/1.9.1...1.9.2) (2026-03-12)
 
 ### Bug Fixes
