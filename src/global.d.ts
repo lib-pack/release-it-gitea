@@ -17,8 +17,6 @@ declare module "release-it" {
 				"release-it-gitea"?: GiteaConfig;
 			};
 		};
-		/** 设置上下文值，支持对象形式或键值对形式 */
-		setContext(path: string, value: unknown): void;
 		/** 设置上下文对象 */
 		setContext(context: Record<string, unknown>): void;
 	}
@@ -62,6 +60,12 @@ declare module "release-it" {
 	 * 所有插件都应该继承此类
 	 */
 	class Plugin {
+		/** 插件命名空间 */
+		namespace: string;
+		/** 插件选项（冻结的） */
+		options: Readonly<Record<string, unknown>>;
+		/** 插件上下文 */
+		context: Record<string, unknown>;
 		/** 配置对象 */
 		config: Config;
 		/** 日志工具 */
@@ -72,6 +76,8 @@ declare module "release-it" {
 			exec: (command: string) => void;
 			/** 输出普通信息 */
 			info: (message: string) => void;
+			/** 输出日志信息 */
+			log: (message: string) => void;
 			/** 输出详细信息 */
 			verbose: (message: string) => void;
 			/** 输出警告信息 */
@@ -80,10 +86,30 @@ declare module "release-it" {
 		/** Shell 命令执行工具 */
 		shell: {
 			/** 执行 shell 命令 */
-			exec: (command: string) => Promise<string>;
+			exec: (
+				command: string,
+				options?: unknown,
+				context?: unknown,
+			) => Promise<string>;
 		};
+		/** 进度指示器 */
+		spinner: unknown;
+		/** 提示工具 */
+		prompt: unknown;
+		/** 调试工具 */
+		debug: (...args: unknown[]) => void;
 
-		constructor(config: Config);
+		constructor(args?: {
+			container?: {
+				config?: Config;
+				log?: Plugin["log"];
+				prompt?: unknown;
+				shell?: Plugin["shell"];
+				spinner?: unknown;
+			};
+			namespace?: string;
+			options?: Record<string, unknown>;
+		});
 
 		/** 禁用插件 */
 		static disablePlugin(): void;
@@ -96,9 +122,22 @@ declare module "release-it" {
 		/** 发布前的钩子 */
 		beforeRelease(): Promise<void>;
 		/** 提升版本号 */
-		bump(): Promise<void>;
+		bump(version?: string): Promise<void>;
 		/** 获取上下文值 */
 		getContext(path?: string): unknown;
+		/** 设置上下文值 */
+		setContext(context: Record<string, unknown>): void;
+		/** 执行 shell 命令 */
+		exec(
+			command: string,
+			options?: { context?: Record<string, unknown>; options?: unknown },
+		): Promise<string>;
+		/** 注册提示 */
+		registerPrompts(prompts: Record<string, unknown>): void;
+		/** 显示提示 */
+		showPrompt(options: Record<string, unknown>): Promise<unknown>;
+		/** 执行步骤 */
+		step(options: Record<string, unknown>): Promise<unknown>;
 		/** 获取版本增量类型 */
 		getIncrement(): string;
 		/** 获取增量后的版本号 */
@@ -106,10 +145,13 @@ declare module "release-it" {
 		/** 在 CI 环境中获取增量后的版本号 */
 		getIncrementedVersionCI(): string;
 		/** 获取初始配置选项 */
-		getInitialOptions(): unknown;
+		getInitialOptions(
+			options: Record<string, unknown>,
+			namespace: string,
+		): Record<string, unknown>;
 		/** 获取最新版本号 */
 		getLatestVersion(): string;
-		/** 获取项目名称 */
+		/** 获取项目名称,返回当前项目的名称 */
 		getName(): string;
 		/** 初始化插件 */
 		init(): Promise<void>;

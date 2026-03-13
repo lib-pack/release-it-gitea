@@ -666,10 +666,9 @@ describe("GiteaPlugin", () => {
 			expect(testPlugin.log.info).toHaveBeenCalledWith(
 				"✅ Gitea 发布创建成功: https://gitea.example.com/testowner/testrepo/releases/tag/v1.0.0",
 			);
-			expect(testMockConfig.setContext).toHaveBeenCalledWith(
-				"releaseUrl",
-				mockRelease.html_url,
-			);
+			expect(testMockConfig.setContext).toHaveBeenCalledWith({
+				releaseUrl: mockRelease.html_url,
+			});
 		});
 
 		it("should update existing release", async () => {

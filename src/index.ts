@@ -33,6 +33,14 @@ class GiteaPlugin extends Plugin {
 	}
 
 	/**
+	 * 获取项目名称
+	 * @returns 项目名称
+	 */
+	getName(): string {
+		return this.config.getContext("name") as string;
+	}
+
+	/**
 	 * 获取并验证 Gitea 配置信息
 	 * @returns 验证后的 Gitea 配置对象
 	 */
@@ -648,7 +656,7 @@ class GiteaPlugin extends Plugin {
 			}
 
 			// 设置发布 URL 到上下文中，供其他插件使用
-			this.config.setContext("releaseUrl", release.html_url);
+			this.config.setContext({ releaseUrl: release.html_url });
 		} catch (error) {
 			if (error instanceof Error) {
 				this.log.error(`❌ 创建 Gitea 发布失败: ${error.message}`);
