@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.4](https://github.com/lib-pack/release-it-gitea/compare/1.9.3...1.9.4) (2026-03-15)
+
+### Bug Fixes
+
+- 支持在创建 Gitea 发布时指定目标 commit ([82e96c4](https://github.com/lib-pack/release-it-gitea/commit/82e96c4c34b06555041e35bed4d9124019dd26ca))
+
 ## [1.9.3](https://github.com/lib-pack/release-it-gitea/compare/1.9.2...1.9.3) (2026-03-13)
 
 ### Bug Fixes
