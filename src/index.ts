@@ -12,6 +12,8 @@ interface GiteaRelease {
 	name: string;
 	prerelease: boolean;
 	tag_name: string;
+	/** 指定 tag 指向的 commit SHA 或分支名 */
+	target_commitish?: string;
 }
 
 interface GiteaReleaseResponse {
@@ -69,6 +71,8 @@ class GiteaPlugin extends Plugin {
 			releaseNotes: gitea.releaseNotes ?? "${changelog}",
 			releaseTitle: gitea.releaseTitle ?? "v${version}",
 			repository: gitea.repository ?? repo.project,
+			tagName: gitea.tagName,
+			targetCommitish: gitea.targetCommitish,
 			timeout: gitea.timeout ?? 30000,
 			tokenRef: gitea.tokenRef ?? "GITEA_TOKEN",
 		};
@@ -611,7 +615,11 @@ class GiteaPlugin extends Plugin {
 		}
 
 		const isDryRun = this.config.isDryRun;
-		const tagName = this.config.getContext("tagName") as string;
+		const tagName =
+			this.giteaConfig.tagName ?? (this.config.getContext("tagName") as string);
+		const targetCommitish =
+			this.giteaConfig.targetCommitish ??
+			(await this.shell.exec("git rev-parse HEAD").then((sha) => sha.trim()));
 		const releaseTitle = await this.getReleaseTitle();
 		const releaseNotes = await this.getReleaseNotes();
 
@@ -623,6 +631,7 @@ class GiteaPlugin extends Plugin {
 			name: releaseTitle,
 			prerelease: this.giteaConfig.prerelease ?? false,
 			tag_name: tagName,
+			target_commitish: targetCommitish,
 		};
 
 		if (isDryRun) {

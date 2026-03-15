@@ -32,6 +32,8 @@ declare module "release-it" {
 		changelog: string;
 		/** 上一个版本号 */
 		latestVersion: string;
+		/** 目标提交 SHA */
+		targetCommitish?: string;
 		/** 项目名称 */
 		name: string;
 		/** 发布 URL（发布完成后可用） */
@@ -216,6 +218,12 @@ interface GiteaConfig {
 
 	/** 是否创建为草稿状态 */
 	draft?: boolean;
+
+	/** 指定 tag 指向的 commit SHA 或分支名，默认为当前 HEAD */
+	targetCommitish?: string;
+
+	/** 自定义 tag 名称，默认从 release-it 上下文获取 */
+	tagName?: string;
 
 	/** 存储 API token 的环境变量名称 */
 	tokenRef?: string;
