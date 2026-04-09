@@ -138,6 +138,9 @@ vi.mock("release-it", () => ({
 			verbose: (message: string) => void;
 			warn: (message: string) => void;
 		};
+		shell: {
+			exec: (command: string) => Promise<string>;
+		};
 
 		constructor(config: Config) {
 			this.config = config;
@@ -147,6 +150,9 @@ vi.mock("release-it", () => ({
 				info: vi.fn(),
 				verbose: vi.fn(),
 				warn: vi.fn(),
+			};
+			this.shell = {
+				exec: vi.fn().mockResolvedValue("abc1234\n"),
 			};
 		}
 
